@@ -1,5 +1,6 @@
 package com.symbysoft.task3;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -21,11 +22,19 @@ public class MainActivity extends AppCompatActivity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+
+		Intent intent = getIntent();
+		if (intent.hasExtra("exit"))
+		{
+			finish();
+			return;
+		}
+
 		setContentView(R.layout.activity_main);
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
-		FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+		/*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 		fab.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -34,7 +43,7 @@ public class MainActivity extends AppCompatActivity
 				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 						.setAction("Action", null).show();
 			}
-		});
+		});*/
 
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -44,13 +53,31 @@ public class MainActivity extends AppCompatActivity
 
 		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
 		navigationView.setNavigationItemSelectedListener(this);
+
+		if (!((MainApp) getApplication()).getDataProvider().isDataLoaded())
+		{
+			intent = new Intent(this, SplashActivity.class);
+			startActivity(intent);
+		}
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		saveData();
+		super.onDestroy();
+	}
+
+	protected void saveData()
+	{
+		((MainApp) getApplication()).getDataProvider().saveData();
 	}
 
 	@Override
 	public void onBackPressed()
 	{
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		if (drawer.isDrawerOpen(GravityCompat.START))
+		if (drawer != null && drawer.isDrawerOpen(GravityCompat.START))
 		{
 			drawer.closeDrawer(GravityCompat.START);
 		}
@@ -79,6 +106,7 @@ public class MainActivity extends AppCompatActivity
 		//noinspection SimplifiableIfStatement
 		if (id == R.id.action_settings)
 		{
+			doMenuSettings();
 			return true;
 		}
 
@@ -92,33 +120,39 @@ public class MainActivity extends AppCompatActivity
 		// Handle navigation view item clicks here.
 		int id = item.getItemId();
 
-		if (id == R.id.nav_camera)
+		switch (id)
 		{
-			// Handle the camera action
-		}
-		else if (id == R.id.nav_gallery)
-		{
+			case R.id.nav_home:
+				break;
 
-		}
-		else if (id == R.id.nav_slideshow)
-		{
+			case R.id.nav_histrory:
+				break;
 
-		}
-		else if (id == R.id.nav_manage)
-		{
+			case R.id.nav_favorites:
+				break;
 
-		}
-		else if (id == R.id.nav_share)
-		{
+			case R.id.nav_settings:
+				doMenuSettings();
+				break;
 
-		}
-		else if (id == R.id.nav_send)
-		{
-
+			case R.id.nav_exit:
+				doMenuExit();
+				break;
 		}
 
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		drawer.closeDrawer(GravityCompat.START);
 		return true;
+	}
+
+	private void doMenuSettings()
+	{
+		Intent intent = new Intent(this, SettingsActivity.class);
+		startActivity(intent);
+	}
+
+	private void doMenuExit()
+	{
+		finish();
 	}
 }

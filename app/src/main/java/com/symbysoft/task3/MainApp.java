@@ -18,4 +18,5 @@ public class MainApp extends Application
 
 		mDataProvider = DataProvider.getInstance(this);
 	}
+
 }

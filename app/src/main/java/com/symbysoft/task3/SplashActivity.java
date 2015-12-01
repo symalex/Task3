@@ -44,6 +44,10 @@ public class SplashActivity extends AppCompatActivity
 
 		// start resource loading
 		mDataProvider.loadData();
+		mDataProvider.downloadApiData();
+		mDataProvider.openDatabase();
+		mDataProvider.readHistoryData();
+		mDataProvider.readFavoriteData();
 		updateProgressLoop(true);
 	}
 
@@ -108,6 +112,7 @@ public class SplashActivity extends AppCompatActivity
 				}
 				else
 				{
+					//onLoadDataComplette();
 					finish();
 				}
 			}

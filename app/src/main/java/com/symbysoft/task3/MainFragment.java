@@ -193,10 +193,11 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 
 	private void doSaveHistory(String src_text, String dest_text)
 	{
-		/*
 		if (src_text.length() > 0 && dest_text.length() > 0)
 		{
-		}*/
+			// save history data
+			mDataProvider.getLocalDataBase().addToHistory(mDataProvider.getTranslateAPI().getTranslateDirection(), src_text, dest_text);
+		}
 	}
 
 	private String change_text(String s)

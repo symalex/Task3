@@ -1,8 +1,10 @@
 package com.symbysoft.task3;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import android.content.ContentValues;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -26,7 +28,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-		implements NavigationView.OnNavigationItemSelectedListener, InternetReceiverNotification, YandexTranslateAPINotification, DataProviderNotification
+		implements NavigationView.OnNavigationItemSelectedListener, InternetReceiverNotification, YandexTranslateAPINotification, DataProviderNotification, LocalDataBaseNotification
 {
 	private static final String TAG = "MainActivity";
 
@@ -94,6 +96,7 @@ public class MainActivity extends AppCompatActivity
 		mDataProvider.setDataProviderNotification(this);
 		mDataProvider.getInternetReceiver().setInternetReceiverNotification(this);
 		mDataProvider.getTranslateAPI().setAPINotification(this);
+		mDataProvider.getLocalDataBase().setDBNotification(this);
 
 		// create fragment page
 		navigateFragment(mDataProvider.getActivePage());
@@ -213,6 +216,90 @@ public class MainActivity extends AppCompatActivity
 		if (mFragment != null && mFragment instanceof DataProviderNotification)
 		{
 			((DataProviderNotification) mFragment).onLoadDataComplette();
+		}
+	}
+
+	@Override
+	public void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.onDBReadHistoryComplette(task, list);
+		}
+
+		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
+		{
+			((LocalDataBaseNotification) mFragment).onDBReadHistoryComplette(task, list);
+		}
+	}
+
+	@Override
+	public void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.onDBReadFavoriteComplette(task, list);
+		}
+
+		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
+		{
+			((LocalDataBaseNotification) mFragment).onDBReadFavoriteComplette(task, list);
+		}
+	}
+
+	@Override
+	public void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.onDBAddHistoryComplette(task, list);
+		}
+
+		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
+		{
+			((LocalDataBaseNotification) mFragment).onDBAddHistoryComplette(task, list);
+		}
+	}
+
+	@Override
+	public void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.onDBDelHistoryComplette(task, list);
+		}
+
+		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
+		{
+			((LocalDataBaseNotification) mFragment).onDBDelHistoryComplette(task, list);
+		}
+	}
+
+	@Override
+	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.onDBAddFavoriteComplette(task, list);
+		}
+
+		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
+		{
+			((LocalDataBaseNotification) mFragment).onDBAddFavoriteComplette(task, list);
+		}
+	}
+
+	@Override
+	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.onDBDelFavoriteComplette(task, list);
+		}
+
+		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
+		{
+			((LocalDataBaseNotification) mFragment).onDBDelFavoriteComplette(task, list);
 		}
 	}
 

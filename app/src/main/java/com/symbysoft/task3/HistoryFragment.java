@@ -3,6 +3,7 @@ package com.symbysoft.task3;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.ContentValues;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -18,7 +19,7 @@ import android.widget.ListView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class HistoryFragment extends Fragment implements AdapterView.OnItemClickListener
+public class HistoryFragment extends Fragment implements AdapterView.OnItemClickListener, LocalDataBaseNotification
 {
 	public static final String FTAG = "history_fragment";
 
@@ -27,6 +28,9 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
 
 	MenuItem mMenuItemFavorite;
 	MenuItem mMenuItemDelete;
+
+	DataProvider mProvider;
+	int mPosition = -1;
 
 	public static Fragment newInstance()
 	{
@@ -39,25 +43,32 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
 		View view = inflater.inflate(R.layout.fragment_history, container, false);
 		ButterKnife.bind(this, view);
 
-		List<String> lines = new ArrayList<>();
-		lines.add("A");
-		lines.add("B");
-		lines.add("C");
-		ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
-				android.R.layout.simple_list_item_1, lines);
-		mListView.setAdapter(adapter);
+		mProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
+		updateList();
+
 		mListView.setSelector(R.drawable.list_selector);
 		mListView.setOnItemClickListener(this);
+		mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		setHasOptionsMenu(true);
 
 		return view;
 	}
 
+	private void updateList()
+	{
+		List<String> lines = new ArrayList<>();
+		for (ContentValues cv : mProvider.getHistoryList())
+		{
+			lines.add((String) cv.get(LocalDataBase.ASYNC_FIELD_SOURCE_TEXT));
+		}
+		ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, lines);
+		mListView.setAdapter(adapter);
+	}
+
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id)
 	{
-		view.setSelected(true);
-
+		mPosition = position;
 		if (mMenuItemFavorite != null)
 		{
 			mMenuItemFavorite.setVisible(true);
@@ -89,15 +100,58 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		// handle item selection
+		ContentValues cv;
 		switch (item.getItemId())
 		{
 			case R.id.history_menu_action_bookmark:
-
+				cv = mProvider.getHistoryList().get(mPosition);
+				mProvider.getLocalDataBase().addToFavorite(cv.getAsLong(DatabaseHelper.KEY_ID));
 				return true;
+
+			case R.id.history_menu_action_delete:
+				cv = mProvider.getHistoryList().get(mPosition);
+				mProvider.getLocalDataBase().delFromHistory(cv.getAsLong(DatabaseHelper.KEY_ID));
+				return true;
+
 			default:
 				return super.onOptionsItemSelected(item);
 		}
+	}
+
+	@Override
+	public void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		updateList();
+	}
+
+	@Override
+	public void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		updateList();
+	}
+
+	@Override
+	public void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		updateList();
+	}
+
+	@Override
+	public void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		updateList();
+	}
+
+	@Override
+	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+
+	}
+
+	@Override
+	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+
 	}
 
 }

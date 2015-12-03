@@ -14,12 +14,34 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper
 {
 	// Contacts table name
-	private static final String TABLE_HISTORY = "history";
-	private static final String TABLE_FAVORITE = "favorite";
-	private static final String KEY_ID = "id";
-	private static final String HIST_ID = "hist_id";
-	private static final String HIST_SOURCE = "src";
-	private static final String HIST_DEST = "dest";
+	private final String TABLE_HISTORY = "history";
+	private final String TABLE_FAVORITE = "favorite";
+	public static final String KEY_ID = "id";
+	public static final String DATE_TIME = "dt";
+	public static final String HIST_ID = "hist_id";
+	public static final String HIST_SOURCE = "src";
+	public static final String HIST_DEST = "dest";
+	public static final String DIRECTION = "dir";
+
+	public static final String COUNT = "count";
+
+	private int mHistoryCounter;
+	private int mFavoriteCounter;
+
+	public int getHistoryCounter()
+	{
+		return mHistoryCounter;
+	}
+
+	public int getFavoriteCounter()
+	{
+		return mFavoriteCounter;
+	}
+
+	public int getProgress()
+	{
+		return mFavoriteCounter + mHistoryCounter;
+	}
 
 	public DatabaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version)
 	{
@@ -30,14 +52,16 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	public void onCreate(SQLiteDatabase db)
 	{
 		String CREATE_HISTORY_TABLE = "CREATE TABLE " + TABLE_HISTORY + "(" +
-				KEY_ID + " INTEGER PRIMARY KEY," +
-				HIST_SOURCE + " TEXT," +
-				HIST_DEST + " TEXT" + ")";
+				KEY_ID + " INTEGER PRIMARY KEY," +                             // 0
+				DATE_TIME + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL," + // 1
+				DIRECTION + " VARCHAR(5)," +                                   // 2
+				HIST_SOURCE + " TEXT," +                                       // 3
+				HIST_DEST + " TEXT" + ")";                                     // 4
 		db.execSQL(CREATE_HISTORY_TABLE);
 
 		String CREATE_FAVORITE_TABLE = "CREATE TABLE " + TABLE_FAVORITE + "(" +
-				KEY_ID + " INTEGER PRIMARY KEY," +
-				HIST_ID + " INTEGER" + ")";
+				KEY_ID + " INTEGER PRIMARY KEY," + // 0
+				HIST_ID + " INTEGER" + ")";        // 1
 		db.execSQL(CREATE_FAVORITE_TABLE);
 	}
 
@@ -52,32 +76,103 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		onCreate(db);
 	}
 
-	public void addToHistory(String direction, String src_text, String dest_text)
+	public int getHistoryRecordCount()
+	{
+		SQLiteDatabase db = getReadableDatabase();
+		String selectQuery = "SELECT COUNT(*) FROM " + TABLE_HISTORY;
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		cursor.moveToFirst();
+		int count = cursor.getInt(0);
+		cursor.close();
+		return count;
+	}
+
+	public ContentValues addToHistory(String direction, String src_text, String dest_text)
 	{
 		SQLiteDatabase db = getWritableDatabase();
 		ContentValues cv = new ContentValues();
+		cv.put(DIRECTION, direction);
 		cv.put(HIST_SOURCE, src_text);
 		cv.put(HIST_DEST, dest_text);
-		db.insert(TABLE_HISTORY, null, cv);
+		long id = db.insert(TABLE_HISTORY, null, cv);
+		cv.put(KEY_ID, id);
+		return cv;
 	}
 
-	public List<String> getHistoryData()
+	public ContentValues delFromHistory(long id)
 	{
-		List<String> list = new ArrayList<>();
+		SQLiteDatabase db = getWritableDatabase();
+		int count = db.delete(TABLE_HISTORY, "id=?", new String[]{String.valueOf(id)});
+		ContentValues cv = new ContentValues();
+		cv.put(KEY_ID, id);
+		cv.put(COUNT, count);
+		return cv;
+	}
+
+	public List<ContentValues> getHistoryData()
+	{
+		List<ContentValues> list = new ArrayList<>();
 		String selectQuery = "SELECT  * FROM " + TABLE_HISTORY;
 
-		SQLiteDatabase db = getWritableDatabase();
+		SQLiteDatabase db = getReadableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
+
+		mHistoryCounter = 0;
 
 		if (cursor.moveToFirst())
 		{
 			do
 			{
-				String item = cursor.getString(1);
-				list.add(item);
+				ContentValues cv = new ContentValues();
+				cv.put(KEY_ID, cursor.getLong(0));
+				cv.put(DATE_TIME, cursor.getString(1));
+				cv.put(DIRECTION, cursor.getString(2));
+				cv.put(HIST_SOURCE, cursor.getString(3));
+				cv.put(HIST_DEST, cursor.getString(4));
+				list.add(cv);
+				mHistoryCounter += 1;
 			}
 			while (cursor.moveToNext());
 		}
+		cursor.close();
+
+		return list;
+	}
+
+	public int getFavoriteRecordCount()
+	{
+		SQLiteDatabase db = getReadableDatabase();
+		String selectQuery = "SELECT COUNT(*) FROM " + TABLE_FAVORITE;
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		cursor.moveToFirst();
+		int count = cursor.getInt(0);
+		cursor.close();
+		return count;
+	}
+
+	public List<ContentValues> getFavoriteData()
+	{
+		List<ContentValues> list = new ArrayList<>();
+		String selectQuery = "SELECT  * FROM " + TABLE_FAVORITE;
+
+		SQLiteDatabase db = getReadableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+
+		mFavoriteCounter = 0;
+
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				ContentValues cv = new ContentValues();
+				cv.put(KEY_ID, cursor.getLong(0));
+				cv.put(HIST_ID, cursor.getLong(1));
+				list.add(cv);
+				mFavoriteCounter += 1;
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
 
 		return list;
 	}

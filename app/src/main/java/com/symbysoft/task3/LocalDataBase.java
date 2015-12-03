@@ -1,7 +1,10 @@
 package com.symbysoft.task3;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -15,16 +18,48 @@ public class LocalDataBase implements LocalDataBaseNotification
 	// Database Version
 	public static final int DATABASE_VERSION = 1;
 
+	public static final String ASYNC_ACTION = "action";
+	public static final String ASYNC_FIELD_DIRECTION = "dir";
+	public static final String ASYNC_FIELD_SOURCE_TEXT = "src";
+	public static final String ASYNC_FIELD_DESTINATION_TEXT = "dest";
+
+	private enum RuningAction
+	{
+		RA_READ_FAVORITE,
+		RA_READ_HISTORY,
+		RA_ADD_HISTORY,
+		RA_DEL_HISTORY,
+		RA_ADD_FAVORITE,
+		RA_DEL_FAVORITE
+	}
+
 	private Context mCtx;
 	private DatabaseHelper mDBHelper;
 	private SQLiteDatabase mDB;
+	private LocalDataBaseNotification mDBNotification;
 
-	private LocalDataBaseTask mReadHistoryTask;
-	private LocalDataBaseTask mAddHistoryTask;
+	private LocalDataBaseTask mTask;
+	private LinkedList<ContentValues> mActions;
+
+	public DatabaseHelper getDBHelper()
+	{
+		return mDBHelper;
+	}
+
+	public LocalDataBaseNotification getDBNotification()
+	{
+		return mDBNotification;
+	}
+
+	public void setDBNotification(LocalDataBaseNotification DBNotification)
+	{
+		mDBNotification = DBNotification;
+	}
 
 	private LocalDataBase(Context ctx)
 	{
 		mCtx = ctx;
+		mActions = new LinkedList<>();
 	}
 
 	public static LocalDataBase newInstance(Context ctx)
@@ -44,7 +79,7 @@ public class LocalDataBase implements LocalDataBaseNotification
 			mDBHelper.close();
 	}
 
-	private void CancelTask(LocalDataBaseTask task)
+	private void cancelTask(LocalDataBaseTask task)
 	{
 		if (task != null)
 		{
@@ -52,25 +87,196 @@ public class LocalDataBase implements LocalDataBaseNotification
 		}
 	}
 
-	public void addToHistory(String direction, String src_text, String dest_text)
+	protected void startNextAction(ContentValues action)
 	{
-		CancelTask(mAddHistoryTask);
-		mAddHistoryTask = new LocalDataBaseTask(mDBHelper);
-		mAddHistoryTask.setDBNotification(this);
-		mAddHistoryTask.addToHistory(direction, src_text, dest_text);
+		if (action != null)
+		{
+			mActions.addLast(action);
+		}
+
+		if (mActions.size() > 0)
+		{
+			if (mTask == null)
+			{
+				action = mActions.removeFirst();
+				run(action);
+			}
+		}
+		else
+		{
+			// run action
+			run(action);
+		}
 	}
 
-	public void loadHistory()
+	protected void run(ContentValues cv)
 	{
-		CancelTask(mReadHistoryTask);
-		mReadHistoryTask = new LocalDataBaseTask(mDBHelper);
-		mReadHistoryTask.setDBNotification(this);
-		mReadHistoryTask.getHistoryData();
+		if (mTask == null && cv != null)
+		{
+			// get action
+			switch (RuningAction.values()[(int) cv.get(ASYNC_ACTION)])
+			{
+				case RA_READ_FAVORITE:
+					cancelTask(mTask);
+					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask.setDBNotification(this);
+					mTask.getFavoriteData();
+					break;
+
+				case RA_READ_HISTORY:
+					cancelTask(mTask);
+					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask.setDBNotification(this);
+					mTask.getHistoryData();
+					break;
+
+				case RA_ADD_HISTORY:
+					cancelTask(mTask);
+					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask.setDBNotification(this);
+					mTask.addToHistory((String) cv.get(ASYNC_FIELD_DIRECTION), (String) cv.get(ASYNC_FIELD_SOURCE_TEXT), (String) cv.get(ASYNC_FIELD_DESTINATION_TEXT));
+					break;
+
+				case RA_DEL_HISTORY:
+					cancelTask(mTask);
+					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask.setDBNotification(this);
+					mTask.delFromHistory(cv.getAsLong(DatabaseHelper.KEY_ID));
+					break;
+
+				case RA_ADD_FAVORITE:
+					cancelTask(mTask);
+					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask.setDBNotification(this);
+					break;
+
+				case RA_DEL_FAVORITE:
+					cancelTask(mTask);
+					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask.setDBNotification(this);
+					break;
+			}
+		}
+	}
+
+	public void addToFavorite(long hist_id)
+	{
+		ContentValues cv = new ContentValues();
+		cv.put(ASYNC_ACTION, RuningAction.RA_ADD_FAVORITE.ordinal());
+		cv.put(DatabaseHelper.HIST_ID, hist_id);
+		startNextAction(cv);
+	}
+
+	public void delFromFavorite(long id)
+	{
+		ContentValues cv = new ContentValues();
+		cv.put(ASYNC_ACTION, RuningAction.RA_DEL_FAVORITE.ordinal());
+		cv.put(DatabaseHelper.KEY_ID, id);
+		startNextAction(cv);
+	}
+
+	public void addToHistory(String direction, String src_text, String dest_text)
+	{
+		ContentValues cv = new ContentValues();
+		cv.put(ASYNC_ACTION, RuningAction.RA_ADD_HISTORY.ordinal());
+		cv.put(ASYNC_FIELD_DIRECTION, direction);
+		cv.put(ASYNC_FIELD_SOURCE_TEXT, src_text);
+		cv.put(ASYNC_FIELD_DESTINATION_TEXT, dest_text);
+		startNextAction(cv);
+	}
+
+	public void delFromHistory(long id)
+	{
+		ContentValues cv = new ContentValues();
+		cv.put(ASYNC_ACTION, RuningAction.RA_DEL_HISTORY.ordinal());
+		cv.put(DatabaseHelper.KEY_ID, id);
+		startNextAction(cv);
+	}
+
+	public void getFavoriteAndHistoryData()
+	{
+		readFavorite();
+		readHistory();
+	}
+
+	public void readFavorite()
+	{
+		ContentValues cv = new ContentValues();
+		cv.put(ASYNC_ACTION, RuningAction.RA_READ_FAVORITE.ordinal());
+		startNextAction(cv);
+	}
+
+	public void readHistory()
+	{
+		ContentValues cv = new ContentValues();
+		cv.put(ASYNC_ACTION, RuningAction.RA_READ_HISTORY.ordinal());
+		startNextAction(cv);
 	}
 
 	@Override
-	public void onDBReadHistoryComplette(LocalDataBaseTask task, List<String> list)
+	public void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		list.clear();
+		mTask = null;
+		if (mDBNotification != null)
+		{
+			mDBNotification.onDBReadFavoriteComplette(task, list);
+		}
+		startNextAction(null);
 	}
+
+	@Override
+	public void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		mTask = null;
+		if (mDBNotification != null)
+		{
+			mDBNotification.onDBAddHistoryComplette(task, list);
+		}
+		startNextAction(null);
+	}
+
+	@Override
+	public void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		mTask = null;
+		if (mDBNotification != null)
+		{
+			mDBNotification.onDBDelHistoryComplette(task, list);
+		}
+		startNextAction(null);
+	}
+
+	@Override
+	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		mTask = null;
+		if (mDBNotification != null)
+		{
+			mDBNotification.onDBAddFavoriteComplette(task, list);
+		}
+		startNextAction(null);
+	}
+
+	@Override
+	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		mTask = null;
+		if (mDBNotification != null)
+		{
+			mDBNotification.onDBDelFavoriteComplette(task, list);
+		}
+		startNextAction(null);
+	}
+
+	@Override
+	public void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		mTask = null;
+		if (mDBNotification != null)
+		{
+			mDBNotification.onDBReadHistoryComplette(task, list);
+		}
+		startNextAction(null);
+	}
+
 }

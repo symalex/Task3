@@ -65,7 +65,7 @@ public class YandexTranslateAPIBaseTask extends AsyncTask<Void, Void, String>
 			{
 				InputStream inputStream = urlConnection.getInputStream();
 				StringBuilder buffer = new StringBuilder();
-				
+
 				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
 				String line;

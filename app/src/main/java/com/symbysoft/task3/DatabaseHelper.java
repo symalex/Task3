@@ -116,7 +116,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		String selectQuery;
 		Cursor cursor;
 		boolean found;
-		
+
 		long id = -1;
 		selectQuery = String.format("SELECT  * FROM %s WHERE %s=%d", TABLE_FAVORITE, HIST_ID, hist_id);
 		cursor = db.rawQuery(selectQuery, null);

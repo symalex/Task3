@@ -4,14 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 
 public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>>
 {
 	private static final String TAG = "LocalDataBaseTask";
+
+	public interface LocalDataBaseNotification
+	{
+		void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list);
+
+		void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list);
+
+		void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list);
+
+		void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list);
+
+		void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list);
+
+		void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list);
+	}
 
 	public enum LocalDataBaseAction
 	{
@@ -21,12 +33,14 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 		DB_ACTION_READ_HISTORY_DATA,
 		DB_ACTION_WRITE_HISTORY_DATA,
 		DB_ACTION_ADD_HISTORY,
-		DB_ACTION_DEL_HISTORY
+		DB_ACTION_DEL_HISTORY,
+		DB_ACTION_ADD_FAVORITE,
+		DB_ACTION_DEL_FAVORITE
 	}
 
 	private LocalDataBaseAction mAction = LocalDataBaseAction.DB_ACTION_NONE;
-	private DatabaseHelper mDbHelper;
-	private ContentValues mValues;
+	private final DatabaseHelper mDbHelper;
+	private final ContentValues mValues;
 
 	private LocalDataBaseNotification mDBNotification;
 
@@ -81,6 +95,22 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 		execute();
 	}
 
+	public void addToFavorite(long hist_id)
+	{
+		mAction = LocalDataBaseAction.DB_ACTION_ADD_FAVORITE;
+		mValues.clear();
+		mValues.put(DatabaseHelper.HIST_ID, hist_id);
+		execute();
+	}
+
+	public void delFromFavorite(long id)
+	{
+		mAction = LocalDataBaseAction.DB_ACTION_DEL_FAVORITE;
+		mValues.clear();
+		mValues.put(DatabaseHelper.KEY_ID, id);
+		execute();
+	}
+
 	@Override
 	protected List<ContentValues> doInBackground(Void... params)
 	{
@@ -101,6 +131,14 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 
 			case DB_ACTION_DEL_HISTORY:
 				list.add(mDbHelper.delFromHistory(mValues.getAsLong(DatabaseHelper.KEY_ID)));
+				break;
+
+			case DB_ACTION_ADD_FAVORITE:
+				list.add(mDbHelper.addToFavorite(mValues.getAsLong(DatabaseHelper.HIST_ID)));
+				break;
+
+			case DB_ACTION_DEL_FAVORITE:
+				list.add(mDbHelper.delFromFavorite(mValues.getAsLong(DatabaseHelper.KEY_ID)));
 				break;
 
 		}
@@ -139,6 +177,20 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 				if (mDBNotification != null)
 				{
 					mDBNotification.onDBDelHistoryComplette(this, list);
+				}
+				break;
+
+			case DB_ACTION_ADD_FAVORITE:
+				if (mDBNotification != null)
+				{
+					mDBNotification.onDBAddFavoriteComplette(this, list);
+				}
+				break;
+
+			case DB_ACTION_DEL_FAVORITE:
+				if (mDBNotification != null)
+				{
+					mDBNotification.onDBDelFavoriteComplette(this, list);
 				}
 				break;
 

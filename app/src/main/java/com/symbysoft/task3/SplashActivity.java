@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -21,7 +20,7 @@ public class SplashActivity extends AppCompatActivity
 	private DataProvider mDataProvider;
 	private boolean mAppExitFlag = false;
 	private Toast mToast;
-	private Handler mHandler = new Handler();
+	private final Handler mHandler = new Handler();
 	@Bind(R.id.activity_splash_progressbar)
 	protected ProgressBar mProgressBar;
 

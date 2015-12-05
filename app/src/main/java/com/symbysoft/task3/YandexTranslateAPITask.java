@@ -1,17 +1,10 @@
 package com.symbysoft.task3;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -28,6 +21,17 @@ public class YandexTranslateAPITask extends YandexTranslateAPIBaseTask
 		YANDEX_TRANSLATE_API_ACTION_LANGS,
 		YANDEX_TRANSLATE_API_ACTION_DETECT_LANG,
 		YANDEX_TRANSLATE_API_ACTION_TRANSLATE
+	}
+
+	public interface YandexTranslateAPINotification
+	{
+		void onSupportedLangsUpdate(YandexTranslateAPITask task, Set<String> dirs, Map<String, String> langs);
+
+		void onDetectedLangUpdate(YandexTranslateAPITask task, String detected_lang);
+
+		void onTranslationUpdate(YandexTranslateAPITask task, String detected_lang, String detected_dir, String text);
+
+		void onHttpRequestResultError(YandexTranslateAPITask task, int http_status_code);
 	}
 
 	private String mUiLang;

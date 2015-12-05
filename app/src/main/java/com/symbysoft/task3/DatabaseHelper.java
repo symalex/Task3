@@ -24,6 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	public static final String DIRECTION = "dir";
 
 	public static final String COUNT = "count";
+	public static final String DOUBLE = "double";
 
 	private int mHistoryCounter;
 	private int mFavoriteCounter;
@@ -60,8 +61,8 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		db.execSQL(CREATE_HISTORY_TABLE);
 
 		String CREATE_FAVORITE_TABLE = "CREATE TABLE " + TABLE_FAVORITE + "(" +
-				KEY_ID + " INTEGER PRIMARY KEY," + // 0
-				HIST_ID + " INTEGER" + ")";        // 1
+				KEY_ID + " INTEGER PRIMARY KEY," +                                                            // 0
+				HIST_ID + " INTEGER" + " REFERENCES " + TABLE_HISTORY + "(" + KEY_ID + ") ON DELETE CASCADE" + ")"; // 1
 		db.execSQL(CREATE_FAVORITE_TABLE);
 	}
 
@@ -103,6 +104,56 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	{
 		SQLiteDatabase db = getWritableDatabase();
 		int count = db.delete(TABLE_HISTORY, "id=?", new String[]{String.valueOf(id)});
+		ContentValues cv = new ContentValues();
+		cv.put(KEY_ID, id);
+		cv.put(COUNT, count);
+		return cv;
+	}
+
+	public ContentValues addToFavorite(long hist_id)
+	{
+		SQLiteDatabase db = getWritableDatabase();
+		String selectQuery;
+		Cursor cursor;
+		boolean found;
+		
+		long id = -1;
+		selectQuery = String.format("SELECT  * FROM %s WHERE %s=%d", TABLE_FAVORITE, HIST_ID, hist_id);
+		cursor = db.rawQuery(selectQuery, null);
+		found = cursor.moveToFirst();
+		if (found)
+		{
+			id = cursor.getLong(0);
+		}
+		cursor.close();
+
+		ContentValues cv = new ContentValues();
+		cv.put(HIST_ID, hist_id);
+		if (found)
+		{
+			cv.put(DOUBLE, true);
+		}
+		else
+		{
+			id = db.insert(TABLE_FAVORITE, null, cv);
+		}
+		cv.put(KEY_ID, id);
+
+		selectQuery = String.format("SELECT  * FROM %s WHERE %s=%d", TABLE_HISTORY, KEY_ID, hist_id);
+		cursor = db.rawQuery(selectQuery, null);
+		cursor.moveToFirst();
+		cv.put(DIRECTION, cursor.getString(2));
+		cv.put(HIST_SOURCE, cursor.getString(3));
+		cv.put(HIST_DEST, cursor.getString(4));
+		cursor.close();
+
+		return cv;
+	}
+
+	public ContentValues delFromFavorite(long id)
+	{
+		SQLiteDatabase db = getWritableDatabase();
+		int count = db.delete(TABLE_FAVORITE, "id=?", new String[]{String.valueOf(id)});
 		ContentValues cv = new ContentValues();
 		cv.put(KEY_ID, id);
 		cv.put(COUNT, count);
@@ -153,7 +204,9 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	public List<ContentValues> getFavoriteData()
 	{
 		List<ContentValues> list = new ArrayList<>();
-		String selectQuery = "SELECT  * FROM " + TABLE_FAVORITE;
+		String selectQuery = "SELECT * FROM " + TABLE_FAVORITE +
+				" f JOIN " + TABLE_HISTORY + " h ON " +
+				"f." + HIST_ID + "=h." + KEY_ID;
 
 		SQLiteDatabase db = getReadableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -167,6 +220,11 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				ContentValues cv = new ContentValues();
 				cv.put(KEY_ID, cursor.getLong(0));
 				cv.put(HIST_ID, cursor.getLong(1));
+				//cv.put(KEY_ID, cursor.getLong(2));
+				cv.put(DATE_TIME, cursor.getString(3));
+				cv.put(DIRECTION, cursor.getString(4));
+				cv.put(HIST_SOURCE, cursor.getString(5));
+				cv.put(HIST_DEST, cursor.getString(6));
 				list.add(cv);
 				mFavoriteCounter += 1;
 			}

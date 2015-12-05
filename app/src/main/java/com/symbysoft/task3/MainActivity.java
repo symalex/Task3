@@ -1,34 +1,37 @@
 package com.symbysoft.task3;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import android.content.ContentValues;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.util.Log;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.View;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+
+import com.symbysoft.task3.InternetReceiver.InternetReceiverNotification;
+import com.symbysoft.task3.DataProvider.DataProviderNotification;
+import com.symbysoft.task3.YandexTranslateAPITask.YandexTranslateAPINotification;
 
 public class MainActivity extends AppCompatActivity
-		implements NavigationView.OnNavigationItemSelectedListener, InternetReceiverNotification, YandexTranslateAPINotification, DataProviderNotification, LocalDataBaseNotification
+		implements NavigationView.OnNavigationItemSelectedListener, InternetReceiverNotification, YandexTranslateAPINotification, DataProviderNotification
 {
 	private static final String TAG = "MainActivity";
 
@@ -41,11 +44,13 @@ public class MainActivity extends AppCompatActivity
 	}
 
 	@Bind(R.id.toolbar)
-	Toolbar mToolbar;
+	protected Toolbar mToolbar;
 	@Bind(R.id.drawer_layout)
-	DrawerLayout mDrawer;
+	protected DrawerLayout mDrawer;
 	@Bind(R.id.nav_view)
-	NavigationView mNavigationView;
+	protected NavigationView mNavigationView;
+	@Bind(R.id.app_bar_main_btn_translate)
+	protected FloatingActionButton mBtnTranslate;
 
 	private boolean mExitFlag = false;
 	private DataProvider mDataProvider;
@@ -74,17 +79,6 @@ public class MainActivity extends AppCompatActivity
 
 		setSupportActionBar(mToolbar);
 
-		/*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-		fab.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View view)
-			{
-				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-						.setAction("Action", null).show();
-			}
-		});*/
-
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
 				this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 		mDrawer.setDrawerListener(toggle);
@@ -93,10 +87,9 @@ public class MainActivity extends AppCompatActivity
 		mNavigationView.setNavigationItemSelectedListener(this);
 
 		mDataProvider = ((MainApp) getApplication()).getDataProvider();
-		mDataProvider.setDataProviderNotification(this);
-		mDataProvider.getInternetReceiver().setInternetReceiverNotification(this);
-		mDataProvider.getTranslateAPI().setAPINotification(this);
-		mDataProvider.getLocalDataBase().setDBNotification(this);
+		mDataProvider.addDataProviderNotification(this);
+		mDataProvider.getInternetReceiver().addInternetReceiverNotification(this);
+		mDataProvider.getTranslateAPI().addAPINotification(this);
 
 		// create fragment page
 		navigateFragment(mDataProvider.getActivePage());
@@ -108,10 +101,16 @@ public class MainActivity extends AppCompatActivity
 		}
 	}
 
-	@Override
-	protected void onStart()
+	@OnClick(R.id.app_bar_main_btn_translate)
+	public void onButtonClickTranslate(View view)
 	{
-		super.onStart();
+		/*
+		Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+				.setAction("Action", null).show();*/
+		if (mFragment != null && mFragment instanceof MainFragment)
+		{
+			((MainFragment) mFragment).onButtonClickTranslate(view);
+		}
 	}
 
 	@Override
@@ -126,6 +125,9 @@ public class MainActivity extends AppCompatActivity
 	{
 		if (mDataProvider != null && mExitFlag)
 		{
+			mDataProvider.getInternetReceiver().removeInternetReceiverNotification(this);
+			mDataProvider.removeDataProviderNotification(this);
+			mDataProvider.getTranslateAPI().removeAPINotification(this);
 			mDataProvider.onDestroy();
 		}
 		super.onDestroy();
@@ -134,60 +136,26 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	public void onInternetConnectionChange(InternetReceiver receiver)
 	{
-		if (mFragment != null && mFragment instanceof InternetReceiverNotification && mDataProvider != null)
+		if (mDataProvider != null && receiver.isConnectionOk() && !mDataProvider.getSettings().getTranslateAPIData().isLanguageDataReady())
 		{
-			if (receiver.isConnectionOk() && !mDataProvider.getSettings().getTranslateAPIData().isLanguageDataReady())
-			{
-				mDataProvider.getTranslateAPI().update();
-			}
-			((MainFragment) mFragment).onInternetConnectionChange(receiver);
+			mDataProvider.getTranslateAPI().update();
 		}
+		mBtnTranslate.setVisibility(receiver.isConnectionOk() ? View.VISIBLE : View.GONE);
 	}
 
 	@Override
 	public void onSupportedLangsUpdate(YandexTranslateAPITask task, Set<String> dirs, Map<String, String> langs)
 	{
-		// save dirs & langs
-		if (mDataProvider != null)
-		{
-			mDataProvider.getSettings().onSupportedLangsUpdate(task, dirs, langs);
-		}
-
-		// fragment notification
-		if (mFragment != null && mFragment instanceof YandexTranslateAPINotification)
-		{
-			((YandexTranslateAPINotification) mFragment).onSupportedLangsUpdate(task, dirs, langs);
-		}
 	}
 
 	@Override
 	public void onDetectedLangUpdate(YandexTranslateAPITask task, String detected_lang)
 	{
-		// save dirs & langs
-		if (mDataProvider != null)
-		{
-			mDataProvider.getSettings().onDetectedLangUpdate(task, detected_lang);
-		}
-
-		if (mFragment != null && mFragment instanceof YandexTranslateAPINotification)
-		{
-			((YandexTranslateAPINotification) mFragment).onDetectedLangUpdate(task, detected_lang);
-		}
 	}
 
 	@Override
 	public void onTranslationUpdate(YandexTranslateAPITask task, String detected_lang, String detected_dir, String text)
 	{
-		// save dirs & langs
-		if (mDataProvider != null)
-		{
-			mDataProvider.getSettings().onTranslationUpdate(task, detected_lang, detected_dir, text);
-		}
-
-		if (mFragment != null && mFragment instanceof YandexTranslateAPINotification)
-		{
-			((YandexTranslateAPINotification) mFragment).onTranslationUpdate(task, detected_lang, detected_dir, text);
-		}
 	}
 
 	@Override
@@ -219,93 +187,17 @@ public class MainActivity extends AppCompatActivity
 		}
 	}
 
-	@Override
-	public void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-		if (mDataProvider != null)
-		{
-			mDataProvider.onDBReadHistoryComplette(task, list);
-		}
-
-		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
-		{
-			((LocalDataBaseNotification) mFragment).onDBReadHistoryComplette(task, list);
-		}
-	}
-
-	@Override
-	public void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-		if (mDataProvider != null)
-		{
-			mDataProvider.onDBReadFavoriteComplette(task, list);
-		}
-
-		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
-		{
-			((LocalDataBaseNotification) mFragment).onDBReadFavoriteComplette(task, list);
-		}
-	}
-
-	@Override
-	public void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-		if (mDataProvider != null)
-		{
-			mDataProvider.onDBAddHistoryComplette(task, list);
-		}
-
-		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
-		{
-			((LocalDataBaseNotification) mFragment).onDBAddHistoryComplette(task, list);
-		}
-	}
-
-	@Override
-	public void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-		if (mDataProvider != null)
-		{
-			mDataProvider.onDBDelHistoryComplette(task, list);
-		}
-
-		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
-		{
-			((LocalDataBaseNotification) mFragment).onDBDelHistoryComplette(task, list);
-		}
-	}
-
-	@Override
-	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-		if (mDataProvider != null)
-		{
-			mDataProvider.onDBAddFavoriteComplette(task, list);
-		}
-
-		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
-		{
-			((LocalDataBaseNotification) mFragment).onDBAddFavoriteComplette(task, list);
-		}
-	}
-
-	@Override
-	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-		if (mDataProvider != null)
-		{
-			mDataProvider.onDBDelFavoriteComplette(task, list);
-		}
-
-		if (mFragment != null && mFragment instanceof LocalDataBaseNotification)
-		{
-			((LocalDataBaseNotification) mFragment).onDBDelFavoriteComplette(task, list);
-		}
-	}
-
-	protected void saveData()
+	private void saveData()
 	{
 		mDataProvider.saveData();
+	}
+
+	public void gotoMainAndSetData(ContentValues cv)
+	{
+		mDataProvider.getSettings().getTranslateAPIData().setTranslateDirection((String) cv.get(DatabaseHelper.DIRECTION));
+		mDataProvider.getSettings().getTranslateAPIData().setSrcText((String) cv.get(DatabaseHelper.HIST_SOURCE));
+		mDataProvider.getSettings().getTranslateAPIData().setDestText((String) cv.get(DatabaseHelper.HIST_DEST));
+		navigateFragment(MainActivity.FragmentPage.MAIN_FRAGMENT);
 	}
 
 	public void navigateFragment(FragmentPage page)
@@ -317,19 +209,26 @@ public class MainActivity extends AppCompatActivity
 				case MAIN_FRAGMENT:
 					mFragment = setFragment(R.id.app_bar_main_frame_main_container_id, MainFragment.newInstance(), MainFragment.FTAG);
 					mNavigationView.setCheckedItem(R.id.nav_home);
+					if (mDataProvider != null && mDataProvider.getInternetReceiver().isConnectionOk())
+					{
+						mBtnTranslate.setVisibility(View.VISIBLE);
+					}
 					break;
 
 				case HISTORY_FRAGMENT:
+					mBtnTranslate.setVisibility(View.GONE);
 					mFragment = setFragment(R.id.app_bar_main_frame_main_container_id, HistoryFragment.newInstance(), HistoryFragment.FTAG);
-					mNavigationView.setCheckedItem(R.id.nav_histrory);
+					mNavigationView.setCheckedItem(R.id.nav_history);
 					break;
 
 				case FAVORITES_FRAGMENT:
+					mBtnTranslate.setVisibility(View.GONE);
 					mFragment = setFragment(R.id.app_bar_main_frame_main_container_id, FavoriteFragment.newInstance(), FavoriteFragment.FTAG);
 					mNavigationView.setCheckedItem(R.id.nav_favorites);
 					break;
 
 				case SETTING_FRAGMENT:
+					mBtnTranslate.setVisibility(View.GONE);
 					if (mDataProvider != null)
 					{
 						mFragment = setFragment(R.id.app_bar_main_frame_main_container_id, SettingsFragment.newInstance(), SettingsFragment.FTAG);
@@ -443,7 +342,7 @@ public class MainActivity extends AppCompatActivity
 				doMenuHome();
 				break;
 
-			case R.id.nav_histrory:
+			case R.id.nav_history:
 				doMenuHistory();
 				break;
 

@@ -1,9 +1,9 @@
 package com.symbysoft.task3;
 
 import java.io.IOException;
+import java.util.LinkedHashSet;
 
 import android.Manifest;
-import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,16 +16,36 @@ import android.util.Log;
 public class InternetReceiver extends BroadcastReceiver
 {
 	private Context mCtx;
-	private InternetReceiverNotification mInternetReceiverNotification;
+	private final LinkedHashSet<InternetReceiverNotification> mInternetReceiverNotifications;
 	private boolean mIsInitialized = false;
 	private boolean mIsInternetPermissionOk = false;
 	private boolean mIsConnectionOk = false;
 
+	public interface InternetReceiverNotification
+	{
+		void onInternetConnectionChange(InternetReceiver receiver);
+	}
+
 	public static final String FILTER_ACTION = "android.net.conn.CONNECTIVITY_CHANGE";
+
+	public InternetReceiver()
+	{
+		mInternetReceiverNotifications = new LinkedHashSet<>();
+	}
 
 	public void setContext(Context ctx)
 	{
 		mCtx = ctx;
+	}
+
+	public void addInternetReceiverNotification(InternetReceiverNotification notify)
+	{
+		mInternetReceiverNotifications.add(notify);
+	}
+
+	public void removeInternetReceiverNotification(InternetReceiverNotification notify)
+	{
+		mInternetReceiverNotifications.remove(notify);
 	}
 
 	public boolean isInternetPermissionOk()
@@ -36,11 +56,6 @@ public class InternetReceiver extends BroadcastReceiver
 	public boolean isConnectionOk()
 	{
 		return mIsConnectionOk;
-	}
-
-	public void setInternetReceiverNotification(InternetReceiverNotification internetReceiverNotification)
-	{
-		mInternetReceiverNotification = internetReceiverNotification;
 	}
 
 	@Override
@@ -62,9 +77,12 @@ public class InternetReceiver extends BroadcastReceiver
 				Log.d("NetReceiver", "Internet is not connected");
 			}
 
-			if (mInternetReceiverNotification != null)
+			for (InternetReceiverNotification notify : mInternetReceiverNotifications)
 			{
-				mInternetReceiverNotification.onInternetConnectionChange(this);
+				if (notify != null)
+				{
+					notify.onInternetConnectionChange(this);
+				}
 			}
 		}
 	}

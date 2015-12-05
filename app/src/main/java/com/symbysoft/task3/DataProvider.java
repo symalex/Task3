@@ -1,21 +1,19 @@
 package com.symbysoft.task3;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
-import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.support.v4.content.ContextCompat;
+
+import com.symbysoft.task3.LocalDataBaseTask.LocalDataBaseNotification;
 
 public class DataProvider implements LocalDataBaseNotification
 {
 	private MainActivity.FragmentPage mActivePage = MainActivity.FragmentPage.MAIN_FRAGMENT;
-	private Context mCtx;
+	private final Context mCtx;
 	private boolean mReceiverRegistered = false;
 	private boolean mDataLoaded = false;
 	private int mProgress = 0;
@@ -24,10 +22,15 @@ public class DataProvider implements LocalDataBaseNotification
 	private InternetReceiver mInternetReceiver;
 	private YandexTranslateAPI mTranslateAPI;
 	private LocalDataBase mLocalDataBase;
-	private DataProviderNotification mDataProviderNotification;
+	private final LinkedHashSet<DataProviderNotification> mDataProviderNotifications;
 
-	ArrayList<ContentValues> mHistoryList;
-	ArrayList<ContentValues> mFavoriteList;
+	public interface DataProviderNotification
+	{
+		void onLoadDataComplette();
+	}
+
+	private ArrayList<ContentValues> mHistoryList;
+	private ArrayList<ContentValues> mFavoriteList;
 
 	public ArrayList<ContentValues> getHistoryList()
 	{
@@ -54,14 +57,14 @@ public class DataProvider implements LocalDataBaseNotification
 		return mTranslateAPI;
 	}
 
-	public DataProviderNotification getDataProviderNotification()
+	public void addDataProviderNotification(DataProviderNotification notify)
 	{
-		return mDataProviderNotification;
+		mDataProviderNotifications.add(notify);
 	}
 
-	public void setDataProviderNotification(DataProviderNotification dataProviderNotification)
+	public void removeDataProviderNotification(DataProviderNotification notify)
 	{
-		mDataProviderNotification = dataProviderNotification;
+		mDataProviderNotifications.remove(notify);
 	}
 
 	public MainActivity.FragmentPage getActivePage()
@@ -82,6 +85,7 @@ public class DataProvider implements LocalDataBaseNotification
 	private DataProvider(Context ctx)
 	{
 		mCtx = ctx;
+		mDataProviderNotifications = new LinkedHashSet<>();
 		mHistoryList = new ArrayList<>();
 		mFavoriteList = new ArrayList<>();
 	}
@@ -93,7 +97,7 @@ public class DataProvider implements LocalDataBaseNotification
 		return data;
 	}
 
-	protected void onCreate()
+	private void onCreate()
 	{
 		// application settings
 		mSettings = SettingsProvider.getInstance(mCtx);
@@ -105,11 +109,12 @@ public class DataProvider implements LocalDataBaseNotification
 		mInternetReceiver.updateConnectionState();
 
 		// translate API
-		mTranslateAPI = YandexTranslateAPI.newInstance();
+		mTranslateAPI = YandexTranslateAPI.newInstance(mCtx);
 		mLocalDataBase = LocalDataBase.newInstance(mCtx);
+		mLocalDataBase.addDBNotification(this);
 	}
 
-	protected void registerInternetReceiver()
+	private void registerInternetReceiver()
 	{
 		if (!mReceiverRegistered && mCtx != null && mInternetReceiver != null)
 		{
@@ -137,6 +142,7 @@ public class DataProvider implements LocalDataBaseNotification
 
 		if (mLocalDataBase != null)
 		{
+			mLocalDataBase.removeDBNotification(this);
 			mLocalDataBase.close();
 		}
 	}
@@ -168,9 +174,12 @@ public class DataProvider implements LocalDataBaseNotification
 		mTranslateAPI.setApiKey(mSettings.getTranslateAPIData().getApiKey());
 		mTranslateAPI.setTranslateDirection(mSettings.getTranslateAPIData().getTranslateDirection());
 
-		if (mDataProviderNotification != null)
+		for (DataProviderNotification notify : mDataProviderNotifications)
 		{
-			mDataProviderNotification.onLoadDataComplette();
+			if (notify != null)
+			{
+				notify.onLoadDataComplette();
+			}
 		}
 	}
 
@@ -214,7 +223,72 @@ public class DataProvider implements LocalDataBaseNotification
 		mLocalDataBase.readFavorite();
 	}
 
+	private int findElement(ArrayList<ContentValues> result, List<ContentValues> list, String key, boolean is_long)
+	{
+		int index;
+		if (list.size() > 0)
+		{
+			long id = -1;
+			String str = "";
+			if (is_long)
+			{
+				id = list.get(0).getAsLong(key);
+			}
+			else
+			{
+				str = list.get(0).getAsString(key);
+			}
+
+			index = 0;
+			for (ContentValues cv : result)
+			{
+				if (is_long)
+				{
+					if (cv.getAsLong(key) == id)
+					{
+						break;
+					}
+				}
+				else
+				{
+					if (str.equals(cv.getAsString(key)))
+					{
+						break;
+					}
+				}
+				index++;
+			}
+			if (index >= result.size())
+			{
+				index = -1;
+			}
+		}
+		else
+		{
+			index = -1;
+		}
+		return index;
+	}
+
+	private void addIfNotFound(ArrayList<ContentValues> result, List<ContentValues> list, String key)
+	{
+		if (findElement(result, list, key, false) == -1)
+		{
+			result.add(list.get(0));
+		}
+	}
+
+	private void removeIfFound(ArrayList<ContentValues> result, List<ContentValues> list, String key)
+	{
+		int index = findElement(result, list, key, true);
+		if (index >= 0)
+		{
+			result.remove(index);
+		}
+	}
+
 	@Override
+	@SuppressWarnings("unchecked")
 	public void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		mProgress += 1;
@@ -224,53 +298,32 @@ public class DataProvider implements LocalDataBaseNotification
 	@Override
 	public void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		ContentValues cv = list.size() > 0 ? list.get(0) : new ContentValues();
-		mHistoryList.add(cv);
+		addIfNotFound(mHistoryList, list, DatabaseHelper.HIST_SOURCE);
 	}
 
 	@Override
 	public void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		long id = -1;
-		if (list.size() > 0)
-		{
-			id = list.get(0).getAsLong(DatabaseHelper.KEY_ID);
-		}
-		int index = 0;
-		if (id > 0)
-		{
-			for (ContentValues cv : mHistoryList)
-			{
-				if (cv.getAsLong(DatabaseHelper.KEY_ID) == id)
-				{
-					break;
-				}
-				index++;
-			}
-		}
-
-		if (index >= 0 && index < mHistoryList.size())
-		{
-			mHistoryList.remove(index);
-		}
+		removeIfFound(mHistoryList, list, DatabaseHelper.KEY_ID);
 	}
 
 	@Override
 	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-
+		addIfNotFound(mFavoriteList, list, DatabaseHelper.HIST_SOURCE);
 	}
 
 	@Override
 	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-
+		removeIfFound(mFavoriteList, list, DatabaseHelper.KEY_ID);
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		mProgress += 1;
+		mProgress = mProgressMax; //+=1+mLocalDataBase.getDBHelper().getProgress()
 		mHistoryList = (ArrayList<ContentValues>) ((ArrayList<ContentValues>) list).clone();
 	}
 

@@ -1,10 +1,6 @@
 package com.symbysoft.task3;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import android.app.Activity;
@@ -34,21 +30,21 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 	public static final String FTAG = "settings_fragment";
 
 	@Bind(R.id.fragment_settings_api_key)
-	EditText mApiKeyText;
+	protected EditText mApiKeyText;
 	@Bind(R.id.fragment_settings_autodetect)
-	CheckBox mCheckboxAutoDetect;
+	protected CheckBox mCheckboxAutoDetect;
 	@Bind(R.id.fragment_settings_src_lang_info)
-	TextView mSourceLanguageInfo;
+	protected TextView mSourceLanguageInfo;
 	@Bind(R.id.fragment_settings_src_lang)
-	Spinner mSpinnerSourceLanguage;
+	protected Spinner mSpinnerSourceLanguage;
 	@Bind(R.id.fragment_settings_btn_swap)
-	Button mBtnSwap;
+	protected Button mBtnSwap;
 	@Bind(R.id.fragment_settings_result_lang)
-	Spinner mSpinnerResultLanguage;
+	protected Spinner mSpinnerResultLanguage;
 	@Bind(R.id.fragment_settings_btn_ok)
-	Button mBtnOk;
+	protected Button mBtnOk;
 	@Bind(R.id.fragment_settings_btn_cancel)
-	Button mBtnCancel;
+	protected Button mBtnCancel;
 
 	private String mDirection;
 	private DataProvider mProvider;
@@ -78,13 +74,6 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 		mCheckboxAutoDetect.setChecked(mAPIData.getTranslateDirection().length() <= 2);
 		setSpinnersDropDownLists(mAPIData.getTranslateDirection());
 		setHasOptionsMenu(true);
-
-		/*
-		if (!mSettings.getTranslateAPIData().isLanguageDataReady())
-		{
-			// hide language selection elements
-
-		}*/
 
 		return view;
 	}

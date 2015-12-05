@@ -2,14 +2,18 @@ package com.symbysoft.task3;
 
 // https://tech.yandex.ru/translate/
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import android.content.Context;
+
+import com.symbysoft.task3.YandexTranslateAPITask.YandexTranslateAPINotification;
+
 public class YandexTranslateAPI implements YandexTranslateAPINotification
 {
+	private final Context mCtx;
 	private String mApiKey;
 	private String mTranslateDirection = "ru"; // example: ru, en-ru;
 	private String mUiLang = "ru";
@@ -18,11 +22,16 @@ public class YandexTranslateAPI implements YandexTranslateAPINotification
 	private YandexTranslateAPITask mSupportLangsTask;
 	private YandexTranslateAPITask mDetectLangTask;
 	private YandexTranslateAPITask mTranslateTask;
-	private YandexTranslateAPINotification mAPINotification;
+	private final LinkedHashSet<YandexTranslateAPINotification> mAPINotifications;
 
-	public void setAPINotification(YandexTranslateAPINotification APINotification)
+	public void addAPINotification(YandexTranslateAPINotification APINotification)
 	{
-		mAPINotification = APINotification;
+		mAPINotifications.add(APINotification);
+	}
+
+	public void removeAPINotification(YandexTranslateAPINotification APINotification)
+	{
+		mAPINotifications.remove(APINotification);
 	}
 
 	public String getApiKey()
@@ -55,14 +64,16 @@ public class YandexTranslateAPI implements YandexTranslateAPINotification
 		return mLastSourceText;
 	}
 
-	private YandexTranslateAPI()
+	private YandexTranslateAPI(Context ctx)
 	{
+		mCtx = ctx;
+		mAPINotifications = new LinkedHashSet<>();
 		updateUiLang();
 	}
 
-	public static YandexTranslateAPI newInstance()
+	public static YandexTranslateAPI newInstance(Context ctx)
 	{
-		return new YandexTranslateAPI();
+		return new YandexTranslateAPI(ctx);
 	}
 
 	public void onDestroy()
@@ -88,9 +99,12 @@ public class YandexTranslateAPI implements YandexTranslateAPINotification
 	@Override
 	public void onSupportedLangsUpdate(YandexTranslateAPITask task, Set<String> dirs, Map<String, String> langs)
 	{
-		if (mAPINotification != null)
+		for (YandexTranslateAPINotification notify : mAPINotifications)
 		{
-			mAPINotification.onSupportedLangsUpdate(task, dirs, langs);
+			if (notify != null)
+			{
+				notify.onSupportedLangsUpdate(task, dirs, langs);
+			}
 		}
 		mSupportLangsTask = null;
 	}
@@ -98,9 +112,12 @@ public class YandexTranslateAPI implements YandexTranslateAPINotification
 	@Override
 	public void onDetectedLangUpdate(YandexTranslateAPITask task, String detected_lang)
 	{
-		if (mAPINotification != null)
+		for (YandexTranslateAPINotification notify : mAPINotifications)
 		{
-			mAPINotification.onDetectedLangUpdate(task, detected_lang);
+			if (notify != null)
+			{
+				notify.onDetectedLangUpdate(task, detected_lang);
+			}
 		}
 		mDetectLangTask = null;
 	}
@@ -108,9 +125,12 @@ public class YandexTranslateAPI implements YandexTranslateAPINotification
 	@Override
 	public void onTranslationUpdate(YandexTranslateAPITask task, String detected_lang, String detected_dir, String text)
 	{
-		if (mAPINotification != null)
+		for (YandexTranslateAPINotification notify : mAPINotifications)
 		{
-			mAPINotification.onTranslationUpdate(task, detected_lang, detected_dir, text);
+			if (notify != null)
+			{
+				notify.onTranslationUpdate(task, detected_lang, detected_dir, text);
+			}
 		}
 		mTranslateTask = null;
 	}
@@ -118,9 +138,12 @@ public class YandexTranslateAPI implements YandexTranslateAPINotification
 	@Override
 	public void onHttpRequestResultError(YandexTranslateAPITask task, int http_status_code)
 	{
-		if (mAPINotification != null)
+		for (YandexTranslateAPINotification notify : mAPINotifications)
 		{
-			mAPINotification.onHttpRequestResultError(task, http_status_code);
+			if (notify != null)
+			{
+				notify.onHttpRequestResultError(task, http_status_code);
+			}
 		}
 		mTranslateTask = null;
 	}
@@ -143,7 +166,7 @@ public class YandexTranslateAPI implements YandexTranslateAPINotification
 		return in_progress;
 	}
 
-	public void updateSupportedLangs()
+	private void updateSupportedLangs()
 	{
 		CancelTask(mSupportLangsTask);
 

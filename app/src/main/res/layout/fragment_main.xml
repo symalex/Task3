@@ -40,12 +40,6 @@
 			android:saveEnabled="true"
 			android:scrollbars="vertical" />
 
-		<Button
-			android:id="@+id/fragment_main_btn_translate"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:text="Translate" />
-
 		<TextView
 			android:id="@+id/fragment_main_bottom_text_info"
 			android:layout_width="match_parent"

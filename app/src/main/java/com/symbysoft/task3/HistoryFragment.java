@@ -3,9 +3,12 @@ package com.symbysoft.task3;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.Activity;
 import android.content.ContentValues;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,18 +22,25 @@ import android.widget.ListView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
+import com.symbysoft.task3.LocalDataBaseTask.LocalDataBaseNotification;
+
 public class HistoryFragment extends Fragment implements AdapterView.OnItemClickListener, LocalDataBaseNotification
 {
+	private final String TAG = "HistoryFragment";
 	public static final String FTAG = "history_fragment";
 
+	private final String PREF = "history";
+	private final String HISTORY_LIST_INDEX = "hist_list_index";
+
 	@Bind(R.id.fragment_history_list_view)
-	ListView mListView;
+	protected ListView mListView;
 
-	MenuItem mMenuItemFavorite;
-	MenuItem mMenuItemDelete;
+	private MenuItem mMenuItemFavorite;
+	private MenuItem mMenuItemDelete;
 
-	DataProvider mProvider;
-	int mPosition = -1;
+	private DataProvider mDataProvider;
+	private int mPosition;
+	private SharedPreferences mPref;
 
 	public static Fragment newInstance()
 	{
@@ -43,7 +53,8 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
 		View view = inflater.inflate(R.layout.fragment_history, container, false);
 		ButterKnife.bind(this, view);
 
-		mProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
+		mDataProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
+		mDataProvider.getLocalDataBase().addDBNotification(this);
 		updateList();
 
 		mListView.setSelector(R.drawable.list_selector);
@@ -51,18 +62,31 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
 		mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		setHasOptionsMenu(true);
 
+		mPref = getContext().getSharedPreferences(PREF, 0);
+		mPosition = mPref.getInt(HISTORY_LIST_INDEX, -1);
+
 		return view;
+	}
+
+	private void updateSelection()
+	{
+		if (mListView != null && mPosition >= 0 && mPosition < mDataProvider.getHistoryList().size())
+		{
+			//int pos = mListView.getSelectedItemPosition();
+			mListView.setSelection(mPosition);
+		}
 	}
 
 	private void updateList()
 	{
 		List<String> lines = new ArrayList<>();
-		for (ContentValues cv : mProvider.getHistoryList())
+		for (ContentValues cv : mDataProvider.getHistoryList())
 		{
-			lines.add((String) cv.get(LocalDataBase.ASYNC_FIELD_SOURCE_TEXT));
+			lines.add((String) cv.get(DatabaseHelper.HIST_SOURCE));
 		}
 		ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, lines);
 		mListView.setAdapter(adapter);
+		updateSelection();
 	}
 
 	@Override
@@ -103,19 +127,70 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
 		ContentValues cv;
 		switch (item.getItemId())
 		{
+			case R.id.history_menu_action_go:
+				if (mPosition >= 0 && mPosition < mDataProvider.getHistoryList().size() && getActivity() instanceof MainActivity)
+				{
+					((MainActivity) getActivity()).gotoMainAndSetData(mDataProvider.getHistoryList().get(mPosition));
+				}
+				return true;
+
 			case R.id.history_menu_action_bookmark:
-				cv = mProvider.getHistoryList().get(mPosition);
-				mProvider.getLocalDataBase().addToFavorite(cv.getAsLong(DatabaseHelper.KEY_ID));
+				if (mPosition >= 0 && mPosition < mDataProvider.getHistoryList().size())
+				{
+					cv = mDataProvider.getHistoryList().get(mPosition);
+					mDataProvider.getLocalDataBase().addToFavorite(cv.getAsLong(DatabaseHelper.KEY_ID));
+				}
 				return true;
 
 			case R.id.history_menu_action_delete:
-				cv = mProvider.getHistoryList().get(mPosition);
-				mProvider.getLocalDataBase().delFromHistory(cv.getAsLong(DatabaseHelper.KEY_ID));
+				if (mPosition >= 0 && mPosition < mDataProvider.getHistoryList().size())
+				{
+					mDataProvider.getLocalDataBase().delFromHistory(mDataProvider.getHistoryList().get(mPosition).getAsLong(DatabaseHelper.KEY_ID));
+				}
 				return true;
 
 			default:
 				return super.onOptionsItemSelected(item);
 		}
+	}
+
+	@Override
+	public void onStart()
+	{
+		super.onStart();
+
+		Log.d(TAG, "onStart()");
+
+		if (mPref != null)
+		{
+			mPosition = mPref.getInt(HISTORY_LIST_INDEX, -1);
+			updateSelection();
+		}
+
+		if (mDataProvider != null)
+		{
+			mDataProvider.getLocalDataBase().addDBNotification(this);
+		}
+	}
+
+	@Override
+	public void onStop()
+	{
+		Log.d(TAG, "onStop()");
+
+		if (mDataProvider != null)
+		{
+			mDataProvider.getLocalDataBase().removeDBNotification(this);
+		}
+
+		if (mPref != null)
+		{
+			SharedPreferences.Editor ed = mPref.edit();
+			ed.putInt(HISTORY_LIST_INDEX, mPosition);
+			ed.commit();
+		}
+
+		super.onStop();
 	}
 
 	@Override
@@ -127,7 +202,6 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
 	@Override
 	public void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		updateList();
 	}
 
 	@Override
@@ -145,13 +219,11 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
 	@Override
 	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-
 	}
 
 	@Override
 	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-
 	}
 
 }

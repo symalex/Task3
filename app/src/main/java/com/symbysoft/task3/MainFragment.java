@@ -3,13 +3,10 @@ package com.symbysoft.task3;
 import java.util.Map;
 import java.util.Set;
 
-import android.app.Activity;
-import android.os.Handler;
-import android.support.v4.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -21,9 +18,14 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.symbysoft.task3.InternetReceiver.InternetReceiverNotification;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+
+import com.symbysoft.task3.DataProvider.DataProviderNotification;
+import com.symbysoft.task3.YandexTranslateAPITask.YandexTranslateAPINotification;
 
 public class MainFragment extends Fragment implements InternetReceiverNotification, YandexTranslateAPINotification, DataProviderNotification
 {
@@ -31,27 +33,27 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 	public static final String FTAG = "main_fragment";
 
 	@Bind(R.id.content_main_layout_translate)
-	LinearLayout mLayoutTranslate;
+	protected LinearLayout mLayoutTranslate;
 	@Bind(R.id.content_main_error_state_text)
-	TextView mErrorText;
+	protected TextView mErrorText;
 	@Bind(R.id.fragment_main_top_text_info)
-	TextView mTextViewTopTextInfo;
+	protected TextView mTextViewTopTextInfo;
 	@Bind(R.id.content_main_edit_text_top)
-	EditText mEditTextTop;
+	protected EditText mEditTextTop;
 	@Bind(R.id.fragment_main_bottom_text_info)
-	TextView mTextViewBottomTextInfo;
+	protected TextView mTextViewBottomTextInfo;
 	@Bind(R.id.content_main_edit_text_bottom)
-	EditText mEditTextBottom;
-	@Bind(R.id.fragment_main_btn_translate)
-	Button mBtnTranslate;
+	protected EditText mEditTextBottom;
+	//@Bind(R.id.fragment_main_btn_translate)
+	//protected FloatingActionButton mBtnTranslate;
 
 	private int mWordsCount = 0;
 	private String mTopTextComparatorStr = "";
 
-	InternetReceiver mReceiver;
-	DataProvider mDataProvider;
-	YandexTranslateAPIData mAPIData;
-	Handler mHandler = new Handler();
+	private InternetReceiver mReceiver;
+	private DataProvider mDataProvider;
+	private YandexTranslateAPIData mAPIData;
+	private final Handler mHandler = new Handler();
 
 	public static Fragment newInstance()
 	{
@@ -127,6 +129,7 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		mDataProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
 		mAPIData = mDataProvider.getSettings().getTranslateAPIData();
 		mReceiver = mDataProvider.getInternetReceiver();
+		mDataProvider.addDataProviderNotification(this);
 
 		updateViewData();
 		mEditTextTop.addTextChangedListener(mTextWatcherTop);
@@ -134,6 +137,19 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		onInternetConnectionChange(mReceiver);
 
 		return view;
+	}
+
+	@Override
+	public void onStart()
+	{
+		super.onStart();
+
+		if (mDataProvider != null)
+		{
+			mDataProvider.addDataProviderNotification(this);
+			mDataProvider.getInternetReceiver().addInternetReceiverNotification(this);
+			mDataProvider.getTranslateAPI().addAPINotification(this);
+		}
 	}
 
 	@Override
@@ -155,6 +171,19 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 	}
 
 	@Override
+	public void onStop()
+	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.getTranslateAPI().removeAPINotification(this);
+			mDataProvider.getInternetReceiver().removeInternetReceiverNotification(this);
+			mDataProvider.removeDataProviderNotification(this);
+		}
+
+		super.onStop();
+	}
+
+	@Override
 	public void onLoadDataComplette()
 	{
 		updateInfoTexts();
@@ -167,13 +196,17 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		updateTextComparators();
 	}
 
-	public void updateInfoTexts()
+	private void updateInfoTexts()
 	{
 		if (mTextViewTopTextInfo != null && mTextViewBottomTextInfo != null)
 		{
 			String direction = mAPIData.getTranslateDirection();
 			setSourceTextInfo(mAPIData.decode(YandexTranslateAPIData.src(direction), false));
 			setDestinationTextInfo(mAPIData.decode(YandexTranslateAPIData.dest(direction), true));
+		}
+		if (mReceiver != null)
+		{
+			onInternetConnectionChange(mReceiver);
 		}
 	}
 
@@ -227,25 +260,35 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		}
 	}
 
+	private void setEnabledUiElements(boolean enabled)
+	{
+		mLayoutTranslate.setEnabled(enabled);
+		mTextViewTopTextInfo.setEnabled(enabled);
+		mTextViewBottomTextInfo.setEnabled(enabled);
+		mEditTextTop.setEnabled(enabled);
+		mEditTextBottom.setEnabled(enabled);
+	}
+
 	@Override
 	public void onInternetConnectionChange(InternetReceiver receiver)
 	{
-		if (mLayoutTranslate != null && mErrorText != null)
+		if (mLayoutTranslate != null && mErrorText != null && mDataProvider != null)
 		{
-			if (receiver.isConnectionOk())
+			setEnabledUiElements(receiver.isConnectionOk());
+			mErrorText.setVisibility(View.GONE);
+			mLayoutTranslate.setVisibility(View.VISIBLE);
+			if (!receiver.isConnectionOk())
 			{
-				mErrorText.setVisibility(View.GONE);
-				mLayoutTranslate.setVisibility(View.VISIBLE);
-			}
-			else
-			{
-				mLayoutTranslate.setVisibility(View.GONE);
-				mErrorText.setVisibility(View.VISIBLE);
+				if (mDataProvider.getHistoryList().size() == 0)
+				{
+					mErrorText.setVisibility(View.VISIBLE);
+					mLayoutTranslate.setVisibility(View.GONE);
+				}
 			}
 		}
 	}
 
-	@OnClick(R.id.fragment_main_btn_translate)
+	//@OnClick(R.id.fragment_main_btn_translate)
 	public void onButtonClickTranslate(View view)
 	{
 		mHandler.removeCallbacks(mRunnableTextTop);

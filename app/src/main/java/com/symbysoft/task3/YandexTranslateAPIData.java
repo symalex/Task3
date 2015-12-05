@@ -8,8 +8,8 @@ import java.util.Set;
 public class YandexTranslateAPIData
 {
 	public static final String DEFAULT_API_KEY = "trnsl.1.1.20151126T092912Z.366a7389b1bb3869.ffe45722eda47f45e459a47a3a8048d68c844baa";
-	public static final String DEFAULT_DIRECTION = "en-ru";
-	public static final String DEFAULT_SRC_VALUE = "en";
+	private static final String DEFAULT_DIRECTION = "en-ru";
+	private static final String DEFAULT_SRC_VALUE = "en";
 	public static final String DEFAULT_DEST_VALUE = "ru";
 
 	private String mApiKey;
@@ -31,7 +31,7 @@ public class YandexTranslateAPIData
 		return direction.length() >= 4 ? direction.substring(3, 5) : (direction.length() >= 2 ? direction.substring(0, 2) : YandexTranslateAPIData.DEFAULT_DEST_VALUE);
 	}
 
-	public static String direction(String src, String dest)
+	private static String direction(String src, String dest)
 	{
 		return src + "-" + dest;
 	}

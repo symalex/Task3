@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.network;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -16,12 +16,12 @@ import android.util.Log;
 public class InternetReceiver extends BroadcastReceiver
 {
 	private Context mCtx;
-	private final LinkedHashSet<InternetReceiverNotification> mInternetReceiverNotifications;
+	private final LinkedHashSet<InternetReceiverListener> mListeners;
 	private boolean mIsInitialized = false;
 	private boolean mIsInternetPermissionOk = false;
 	private boolean mIsConnectionOk = false;
 
-	public interface InternetReceiverNotification
+	public interface InternetReceiverListener
 	{
 		void onInternetConnectionChange(InternetReceiver receiver);
 	}
@@ -30,7 +30,7 @@ public class InternetReceiver extends BroadcastReceiver
 
 	public InternetReceiver()
 	{
-		mInternetReceiverNotifications = new LinkedHashSet<>();
+		mListeners = new LinkedHashSet<>();
 	}
 
 	public void setContext(Context ctx)
@@ -38,14 +38,14 @@ public class InternetReceiver extends BroadcastReceiver
 		mCtx = ctx;
 	}
 
-	public void addInternetReceiverNotification(InternetReceiverNotification notify)
+	public void addInternetReceiverNotification(InternetReceiverListener listener)
 	{
-		mInternetReceiverNotifications.add(notify);
+		mListeners.add(listener);
 	}
 
-	public void removeInternetReceiverNotification(InternetReceiverNotification notify)
+	public void removeInternetReceiverNotification(InternetReceiverListener listener)
 	{
-		mInternetReceiverNotifications.remove(notify);
+		mListeners.remove(listener);
 	}
 
 	public boolean isInternetPermissionOk()
@@ -77,11 +77,11 @@ public class InternetReceiver extends BroadcastReceiver
 				Log.d("NetReceiver", "Internet is not connected");
 			}
 
-			for (InternetReceiverNotification notify : mInternetReceiverNotifications)
+			for (InternetReceiverListener listener : mListeners)
 			{
-				if (notify != null)
+				if (listener != null)
 				{
-					notify.onInternetConnectionChange(this);
+					listener.onInternetConnectionChange(this);
 				}
 			}
 		}

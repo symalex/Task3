@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.network;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,7 +7,8 @@ import java.util.Set;
 
 public class YandexTranslateAPIData
 {
-	public static final String DEFAULT_API_KEY = "trnsl.1.1.20151126T092912Z.366a7389b1bb3869.ffe45722eda47f45e459a47a3a8048d68c844baa";
+	// "trnsl.1.1.20151126T092912Z.366a7389b1bb3869.ffe45722eda47f45e459a47a3a8048d68c844baa"
+	public static final String DEFAULT_API_KEY = "";
 	private static final String DEFAULT_DIRECTION = "en-ru";
 	private static final String DEFAULT_SRC_VALUE = "en";
 	public static final String DEFAULT_DEST_VALUE = "ru";
@@ -18,8 +19,13 @@ public class YandexTranslateAPIData
 	private Set<String> mDirs;
 	private Map<String, String> mLangs;
 
+	private boolean mApiDataInitialized;
 	private String mSrcText;
 	private String mDestText;
+	private String mDetectedDirection;
+	private boolean mCurrentTextInHistory;
+	private boolean mDisableComparatorUpdateOnce;
+	private boolean mRequiredSaveHistory;
 
 	public static String src(String direction)
 	{
@@ -31,7 +37,7 @@ public class YandexTranslateAPIData
 		return direction.length() >= 4 ? direction.substring(3, 5) : (direction.length() >= 2 ? direction.substring(0, 2) : YandexTranslateAPIData.DEFAULT_DEST_VALUE);
 	}
 
-	private static String direction(String src, String dest)
+	public static String direction(String src, String dest)
 	{
 		return src + "-" + dest;
 	}
@@ -96,7 +102,57 @@ public class YandexTranslateAPIData
 		mDestText = destText;
 	}
 
-	YandexTranslateAPIData()
+	public boolean isDisableComparatorUpdateOnce()
+	{
+		return mDisableComparatorUpdateOnce;
+	}
+
+	public void setDisableComparatorUpdateOnce(boolean disableComparatorUpdateOnce)
+	{
+		mDisableComparatorUpdateOnce = disableComparatorUpdateOnce;
+	}
+
+	public boolean isRequiredSaveHistory()
+	{
+		return mRequiredSaveHistory;
+	}
+
+	public void setRequiredSaveHistory(boolean requiredSaveHistory)
+	{
+		mRequiredSaveHistory = requiredSaveHistory;
+	}
+
+	public String getDetectedDirection()
+	{
+		return mDetectedDirection;
+	}
+
+	public void setDetectedDirection(String detectedDirection)
+	{
+		mDetectedDirection = detectedDirection;
+	}
+
+	public boolean isCurrentTextInHistory()
+	{
+		return mCurrentTextInHistory;
+	}
+
+	public void setCurrentTextInHistory(boolean currentTextInHistory)
+	{
+		mCurrentTextInHistory = currentTextInHistory;
+	}
+
+	public boolean isApiDataInitialized()
+	{
+		return mApiDataInitialized;
+	}
+
+	public void setApiDataInitialized(boolean apiDataInitialized)
+	{
+		mApiDataInitialized = apiDataInitialized;
+	}
+
+	public YandexTranslateAPIData()
 	{
 		mApiKey = DEFAULT_API_KEY;
 		mDirs = new HashSet<>();

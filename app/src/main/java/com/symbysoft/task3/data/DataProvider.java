@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.data;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -8,9 +8,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.IntentFilter;
 
-import com.symbysoft.task3.LocalDataBaseTask.LocalDataBaseNotification;
+import com.symbysoft.task3.ui.activities.MainActivity;
+import com.symbysoft.task3.network.InternetReceiver;
+import com.symbysoft.task3.network.YandexTranslateAPI;
 
-public class DataProvider implements LocalDataBaseNotification
+public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 {
 	private MainActivity.FragmentPage mActivePage = MainActivity.FragmentPage.MAIN_FRAGMENT;
 	private final Context mCtx;
@@ -22,9 +24,9 @@ public class DataProvider implements LocalDataBaseNotification
 	private InternetReceiver mInternetReceiver;
 	private YandexTranslateAPI mTranslateAPI;
 	private LocalDataBase mLocalDataBase;
-	private final LinkedHashSet<DataProviderNotification> mDataProviderNotifications;
+	private final LinkedHashSet<DataProviderListener> mListeners;
 
-	public interface DataProviderNotification
+	public interface DataProviderListener
 	{
 		void onLoadDataComplette();
 	}
@@ -57,14 +59,14 @@ public class DataProvider implements LocalDataBaseNotification
 		return mTranslateAPI;
 	}
 
-	public void addDataProviderNotification(DataProviderNotification notify)
+	public void addDataProviderNotification(DataProviderListener listener)
 	{
-		mDataProviderNotifications.add(notify);
+		mListeners.add(listener);
 	}
 
-	public void removeDataProviderNotification(DataProviderNotification notify)
+	public void removeDataProviderNotification(DataProviderListener listener)
 	{
-		mDataProviderNotifications.remove(notify);
+		mListeners.remove(listener);
 	}
 
 	public MainActivity.FragmentPage getActivePage()
@@ -85,12 +87,12 @@ public class DataProvider implements LocalDataBaseNotification
 	private DataProvider(Context ctx)
 	{
 		mCtx = ctx;
-		mDataProviderNotifications = new LinkedHashSet<>();
+		mListeners = new LinkedHashSet<>();
 		mHistoryList = new ArrayList<>();
 		mFavoriteList = new ArrayList<>();
 	}
 
-	static DataProvider getInstance(Context ctx)
+	public static DataProvider getInstance(Context ctx)
 	{
 		DataProvider data = new DataProvider(ctx);
 		data.onCreate();
@@ -133,7 +135,7 @@ public class DataProvider implements LocalDataBaseNotification
 		}
 	}
 
-	void onDestroy()
+	public void onDestroy()
 	{
 		if (mTranslateAPI != null)
 		{
@@ -174,11 +176,11 @@ public class DataProvider implements LocalDataBaseNotification
 		mTranslateAPI.setApiKey(mSettings.getTranslateAPIData().getApiKey());
 		mTranslateAPI.setTranslateDirection(mSettings.getTranslateAPIData().getTranslateDirection());
 
-		for (DataProviderNotification notify : mDataProviderNotifications)
+		for (DataProviderListener listener : mListeners)
 		{
-			if (notify != null)
+			if (listener != null)
 			{
-				notify.onLoadDataComplette();
+				listener.onLoadDataComplette();
 			}
 		}
 	}

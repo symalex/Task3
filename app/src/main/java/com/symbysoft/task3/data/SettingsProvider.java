@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.data;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,9 +11,13 @@ import android.content.SharedPreferences;
 
 import org.json.JSONObject;
 
-import com.symbysoft.task3.YandexTranslateAPITask.YandexTranslateAPINotification;
+import com.symbysoft.task3.MainApp;
+import com.symbysoft.task3.R;
+import com.symbysoft.task3.network.YandexTranslateAPIData;
+import com.symbysoft.task3.network.YandexTranslateAPI;
+import com.symbysoft.task3.network.YandexTranslateAPI.YandexTranslateApiListener;
 
-public class SettingsProvider implements YandexTranslateAPINotification
+public class SettingsProvider implements YandexTranslateApiListener
 {
 	private final Context mCtx;
 	private final SharedPreferences mPref;
@@ -28,6 +32,8 @@ public class SettingsProvider implements YandexTranslateAPINotification
 	private final String YANDEX_API_TRANSLATE_DIRECTION = "yandex_translate_direction";
 	private final String YANDEX_API_SUPPORTED_DIRECTIONS = "yandex_translate_directions";
 	private final String YANDEX_API_SUPPORTED_LANGS = "yandex_translate_langs";
+	private final String YANDEX_API_DETECTED_DIR = "yandex_translate_detected_dir";
+	private final String YANDEX_API_CUR_TEXT_IN_HISTORY = "yandex_translate_cur_text_in_history";
 
 	public YandexTranslateAPIData getTranslateAPIData()
 	{
@@ -48,9 +54,11 @@ public class SettingsProvider implements YandexTranslateAPINotification
 
 	void ReadSettings()
 	{
+		mTranslateAPIData.setApiDataInitialized(true);
+
 		((MainApp) mCtx).getDataProvider().getTranslateAPI().addAPINotification(this);
 
-		mTranslateAPIData.setApiKey(mPref.getString(YANDEX_API_KEY_TEXT, YandexTranslateAPIData.DEFAULT_API_KEY));
+		mTranslateAPIData.setApiKey(mPref.getString(YANDEX_API_KEY_TEXT, mCtx.getResources().getString(R.string.yandex_api_default_key)));
 		mTranslateAPIData.setTranslateDirection(mPref.getString(YANDEX_API_TRANSLATE_DIRECTION, YandexTranslateAPIData.DEFAULT_DEST_VALUE));
 
 		// read directions
@@ -76,6 +84,9 @@ public class SettingsProvider implements YandexTranslateAPINotification
 
 		mTranslateAPIData.setSrcText(mPref.getString(EDIT_TEXT_SOURCE, ""));
 		mTranslateAPIData.setDestText(mPref.getString(EDIT_TEXT_DESTINATION, ""));
+		mTranslateAPIData.setDetectedDirection(mPref.getString(YANDEX_API_DETECTED_DIR, ""));
+		mTranslateAPIData.setCurrentTextInHistory(mPref.getBoolean(YANDEX_API_CUR_TEXT_IN_HISTORY, true));
+
 	}
 
 	void WriteSettings()
@@ -90,32 +101,39 @@ public class SettingsProvider implements YandexTranslateAPINotification
 
 		ed.putString(EDIT_TEXT_SOURCE, mTranslateAPIData.getSrcText());
 		ed.putString(EDIT_TEXT_DESTINATION, mTranslateAPIData.getDestText());
+		ed.putString(YANDEX_API_DETECTED_DIR, mTranslateAPIData.getDetectedDirection());
+		ed.putBoolean(YANDEX_API_CUR_TEXT_IN_HISTORY, mTranslateAPIData.isCurrentTextInHistory());
 
 		ed.commit();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void onSupportedLangsUpdate(YandexTranslateAPITask task, Set<String> dirs, Map<String, String> langs)
+	public void onSupportedLangsUpdate(YandexTranslateAPI api, Set<String> dirs, Map<String, String> langs)
 	{
 		mTranslateAPIData.setDirs((HashSet) ((HashSet) dirs).clone());
 		mTranslateAPIData.setLangs((HashMap) ((HashMap) langs).clone());
 	}
 
 	@Override
-	public void onDetectedLangUpdate(YandexTranslateAPITask task, String detected_lang)
+	public void onDetectedLangUpdate(YandexTranslateAPI api, String detected_lang)
 	{
 
 	}
 
 	@Override
-	public void onTranslationUpdate(YandexTranslateAPITask task, String detected_lang, String detected_dir, String text)
+	public void onTranslationUpdate(YandexTranslateAPI api, String detected_lang, String detected_dir, String text)
 	{
-
+		if (mTranslateAPIData != null)
+		{
+			mTranslateAPIData.setDestText(text);
+			mTranslateAPIData.setDetectedDirection(detected_dir);
+			mTranslateAPIData.setDisableComparatorUpdateOnce(false);
+		}
 	}
 
 	@Override
-	public void onHttpRequestResultError(YandexTranslateAPITask task, int http_status_code)
+	public void onHttpRequestResultError(YandexTranslateAPI api, int http_status_code, String message)
 	{
 
 	}

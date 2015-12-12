@@ -2,6 +2,8 @@ package com.symbysoft.task3;
 
 import android.app.Application;
 
+import com.symbysoft.task3.data.DataProvider;
+
 public class MainApp extends Application
 {
 	private DataProvider mDataProvider;

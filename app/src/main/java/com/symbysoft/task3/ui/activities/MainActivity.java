@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.ui.activities;
 
 import java.util.Map;
 import java.util.Set;
@@ -26,12 +26,23 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-import com.symbysoft.task3.InternetReceiver.InternetReceiverNotification;
-import com.symbysoft.task3.DataProvider.DataProviderNotification;
-import com.symbysoft.task3.YandexTranslateAPITask.YandexTranslateAPINotification;
+import com.symbysoft.task3.ui.fragments.FavoriteFragment;
+import com.symbysoft.task3.ui.fragments.HistoryFragment;
+import com.symbysoft.task3.MainApp;
+import com.symbysoft.task3.ui.fragments.MainFragment;
+import com.symbysoft.task3.R;
+import com.symbysoft.task3.data.DataProvider;
+import com.symbysoft.task3.data.DatabaseHelper;
+import com.symbysoft.task3.ui.fragments.SettingsFragment;
+import com.symbysoft.task3.network.InternetReceiver;
+import com.symbysoft.task3.network.InternetReceiver.InternetReceiverListener;
+import com.symbysoft.task3.data.DataProvider.DataProviderListener;
+import com.symbysoft.task3.network.YandexTranslateAPI;
+import com.symbysoft.task3.network.YandexTranslateAPI.YandexTranslateApiListener;
 
-public class MainActivity extends AppCompatActivity
-		implements NavigationView.OnNavigationItemSelectedListener, InternetReceiverNotification, YandexTranslateAPINotification, DataProviderNotification
+import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
+
+public class MainActivity extends AppCompatActivity implements OnNavigationItemSelectedListener, InternetReceiverListener, YandexTranslateApiListener, DataProviderListener
 {
 	private static final String TAG = "MainActivity";
 
@@ -104,9 +115,6 @@ public class MainActivity extends AppCompatActivity
 	@OnClick(R.id.app_bar_main_btn_translate)
 	public void onButtonClickTranslate(View view)
 	{
-		/*
-		Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-				.setAction("Action", null).show();*/
 		if (mFragment != null && mFragment instanceof MainFragment)
 		{
 			((MainFragment) mFragment).onButtonClickTranslate(view);
@@ -136,7 +144,9 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	public void onInternetConnectionChange(InternetReceiver receiver)
 	{
-		if (mDataProvider != null && receiver.isConnectionOk() && !mDataProvider.getSettings().getTranslateAPIData().isLanguageDataReady())
+		if (mDataProvider != null && receiver.isConnectionOk() &&
+				mDataProvider.getSettings().getTranslateAPIData().isApiDataInitialized() &&
+				!mDataProvider.getSettings().getTranslateAPIData().isLanguageDataReady())
 		{
 			mDataProvider.getTranslateAPI().update();
 		}
@@ -144,22 +154,22 @@ public class MainActivity extends AppCompatActivity
 	}
 
 	@Override
-	public void onSupportedLangsUpdate(YandexTranslateAPITask task, Set<String> dirs, Map<String, String> langs)
+	public void onSupportedLangsUpdate(YandexTranslateAPI api, Set<String> dirs, Map<String, String> langs)
 	{
 	}
 
 	@Override
-	public void onDetectedLangUpdate(YandexTranslateAPITask task, String detected_lang)
+	public void onDetectedLangUpdate(YandexTranslateAPI api, String detected_lang)
 	{
 	}
 
 	@Override
-	public void onTranslationUpdate(YandexTranslateAPITask task, String detected_lang, String detected_dir, String text)
+	public void onTranslationUpdate(YandexTranslateAPI api, String detected_lang, String detected_dir, String text)
 	{
 	}
 
 	@Override
-	public void onHttpRequestResultError(YandexTranslateAPITask task, int http_status_code)
+	public void onHttpRequestResultError(YandexTranslateAPI api, int http_status_code, String message)
 	{
 		if (http_status_code == 403)
 		{
@@ -168,22 +178,30 @@ public class MainActivity extends AppCompatActivity
 		}
 		else
 		{
-			String msg = String.format("HTTP error: %d", http_status_code);
+			String msg;
+			if (http_status_code != 0)
+			{
+				msg = String.format("HTTP error: %d", http_status_code);
+			}
+			else
+			{
+				msg = String.format("HTTP error: %s", message);
+			}
 			Snackbar.make(mDrawer, msg, Snackbar.LENGTH_LONG).show();
 		}
 
-		if (mFragment != null && mFragment instanceof YandexTranslateAPINotification)
+		if (mFragment != null && mFragment instanceof YandexTranslateApiListener)
 		{
-			((YandexTranslateAPINotification) mFragment).onHttpRequestResultError(task, http_status_code);
+			((YandexTranslateApiListener) mFragment).onHttpRequestResultError(api, http_status_code, message);
 		}
 	}
 
 	@Override
 	public void onLoadDataComplette()
 	{
-		if (mFragment != null && mFragment instanceof DataProviderNotification)
+		if (mFragment != null && mFragment instanceof DataProviderListener)
 		{
-			((DataProviderNotification) mFragment).onLoadDataComplette();
+			((DataProviderListener) mFragment).onLoadDataComplette();
 		}
 	}
 
@@ -213,6 +231,7 @@ public class MainActivity extends AppCompatActivity
 					{
 						mBtnTranslate.setVisibility(View.VISIBLE);
 					}
+					((MainFragment) mFragment).setBtnTranslate(mBtnTranslate);
 					break;
 
 				case HISTORY_FRAGMENT:
@@ -242,22 +261,6 @@ public class MainActivity extends AppCompatActivity
 			}
 			mCurPage = page;
 			mDataProvider.setActivePage(mCurPage);
-		}
-	}
-
-	public void setSourceTextInfo(String src_info)
-	{
-		if (mFragment != null && mFragment instanceof MainFragment)
-		{
-			((MainFragment) mFragment).setSourceTextInfo(src_info);
-		}
-	}
-
-	public void setDestinationTextInfo(String dst_info)
-	{
-		if (mFragment != null && mFragment instanceof MainFragment)
-		{
-			((MainFragment) mFragment).setDestinationTextInfo(dst_info);
 		}
 	}
 
@@ -335,7 +338,6 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	public boolean onNavigationItemSelected(MenuItem item)
 	{
-		// Handle navigation view item clicks here.
 		switch (item.getItemId())
 		{
 			case R.id.nav_home:

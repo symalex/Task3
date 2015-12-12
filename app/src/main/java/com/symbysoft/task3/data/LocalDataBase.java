@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.data;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -7,11 +7,9 @@ import java.util.List;
 import android.content.ContentValues;
 import android.content.Context;
 
-import com.symbysoft.task3.LocalDataBaseTask.LocalDataBaseNotification;
-
 // http://startandroid.ru/ru/uroki/vse-uroki-spiskom/112-urok-53-simplecursortreeadapter-primer-ispolzovanija.html
 
-public class LocalDataBase implements LocalDataBaseNotification
+public class LocalDataBase implements LocalDataBaseTask.LocalDataBaseNotification
 {
 	// Database Name
 	private static final String DATABASE_NAME = "history.db";
@@ -37,7 +35,7 @@ public class LocalDataBase implements LocalDataBaseNotification
 
 	private final Context mCtx;
 	private DatabaseHelper mDBHelper;
-	private final LinkedHashSet<LocalDataBaseNotification> mDBNotifications;
+	private final LinkedHashSet<LocalDataBaseTask.LocalDataBaseNotification> mDBNotifications;
 
 	private LocalDataBaseTask mTask;
 	private final LinkedList<ContentValues> mActions;
@@ -47,17 +45,17 @@ public class LocalDataBase implements LocalDataBaseNotification
 		return mDBHelper;
 	}
 
-	public boolean isDBNotificationSet(LocalDataBaseNotification DBNotification)
+	public boolean isDBNotificationSet(LocalDataBaseTask.LocalDataBaseNotification DBNotification)
 	{
 		return mDBNotifications.contains(DBNotification);
 	}
 
-	public void addDBNotification(LocalDataBaseNotification DBNotification)
+	public void addDBNotification(LocalDataBaseTask.LocalDataBaseNotification DBNotification)
 	{
 		mDBNotifications.add(DBNotification);
 	}
 
-	public void removeDBNotification(LocalDataBaseNotification DBNotification)
+	public void removeDBNotification(LocalDataBaseTask.LocalDataBaseNotification DBNotification)
 	{
 		mDBNotifications.remove(DBNotification);
 	}
@@ -224,7 +222,7 @@ public class LocalDataBase implements LocalDataBaseNotification
 	private void notifyAll(RuningAction action, LocalDataBaseTask task, List<ContentValues> list)
 	{
 		mTask = null;
-		for (LocalDataBaseNotification notify : mDBNotifications)
+		for (LocalDataBaseTask.LocalDataBaseNotification notify : mDBNotifications)
 		{
 			if (notify != null)
 			{

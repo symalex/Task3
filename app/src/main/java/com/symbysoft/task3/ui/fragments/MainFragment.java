@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.ui.fragments;
 
 import java.util.Map;
 import java.util.Set;
@@ -13,21 +13,25 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.symbysoft.task3.InternetReceiver.InternetReceiverNotification;
+import com.symbysoft.task3.MainApp;
+import com.symbysoft.task3.R;
+import com.symbysoft.task3.data.DataProvider;
+import com.symbysoft.task3.network.InternetReceiver;
+import com.symbysoft.task3.network.InternetReceiver.InternetReceiverListener;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
-import com.symbysoft.task3.DataProvider.DataProviderNotification;
-import com.symbysoft.task3.YandexTranslateAPITask.YandexTranslateAPINotification;
+import com.symbysoft.task3.data.DataProvider.DataProviderListener;
+import com.symbysoft.task3.network.YandexTranslateAPIData;
+import com.symbysoft.task3.network.YandexTranslateAPI;
+import com.symbysoft.task3.network.YandexTranslateAPI.YandexTranslateApiListener;
 
-public class MainFragment extends Fragment implements InternetReceiverNotification, YandexTranslateAPINotification, DataProviderNotification
+public class MainFragment extends Fragment implements InternetReceiverListener, YandexTranslateApiListener, DataProviderListener
 {
 	private static final String TAG = "MainFragment";
 	public static final String FTAG = "main_fragment";
@@ -44,16 +48,24 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 	protected TextView mTextViewBottomTextInfo;
 	@Bind(R.id.content_main_edit_text_bottom)
 	protected EditText mEditTextBottom;
-	//@Bind(R.id.fragment_main_btn_translate)
-	//protected FloatingActionButton mBtnTranslate;
+
+	// set from MainActivity
+	private FloatingActionButton mBtnTranslate;
+	private boolean mInternalTextUpdateFlag;
 
 	private int mWordsCount = 0;
 	private String mTopTextComparatorStr = "";
+	private int mTopTextPoolPeriodInMs;
 
 	private InternetReceiver mReceiver;
 	private DataProvider mDataProvider;
 	private YandexTranslateAPIData mAPIData;
 	private final Handler mHandler = new Handler();
+
+	public void setBtnTranslate(FloatingActionButton btnTranslate)
+	{
+		mBtnTranslate = btnTranslate;
+	}
 
 	public static Fragment newInstance()
 	{
@@ -65,7 +77,6 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		@Override
 		public void run()
 		{
-			// run text tranlate
 			doTranslateText();
 		}
 	};
@@ -75,21 +86,41 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		@Override
 		public void beforeTextChanged(CharSequence s, int start, int count, int after)
 		{
-			Log.d(TAG, "beforeTextChanged");
 		}
 
 		@Override
 		public void onTextChanged(CharSequence s, int start, int before, int count)
 		{
-			Log.d(TAG, "onTextChanged");
 		}
 
 		@Override
 		public void afterTextChanged(Editable s)
 		{
-			//Log.d(TAG, "afterTextChanged");
-			mHandler.removeCallbacks(mRunnableTextTop);
-			mHandler.postDelayed(mRunnableTextTop, 10000);
+			if (!mInternalTextUpdateFlag)
+			{
+				mHandler.removeCallbacks(mRunnableTextTop);
+				if (mEditTextTop.getText().toString().trim().length() > 0)
+				{
+					mHandler.postDelayed(mRunnableTextTop, mTopTextPoolPeriodInMs);
+					mAPIData.setCurrentTextInHistory(false);
+				}
+				else
+				{
+					mAPIData.setCurrentTextInHistory(true);
+					if (mEditTextBottom != null)
+					{
+						mEditTextBottom.setText("");
+						updateApiDataSettingsText();
+						updateTextComparators();
+						updateInfoTexts();
+					}
+				}
+				updateTranslateButtonHistoryAccess();
+			}
+			else
+			{
+				mInternalTextUpdateFlag = false;
+			}
 		}
 	};
 
@@ -116,8 +147,14 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 
 	private void updateTextComparators()
 	{
-		mWordsCount = wordsCount(mEditTextTop.getText().toString());
-		mTopTextComparatorStr = getTextComparator(mEditTextTop.getText().toString());
+		if (mAPIData != null)
+		{
+			if (!mAPIData.isDisableComparatorUpdateOnce())
+			{
+				mWordsCount = wordsCount(mEditTextTop.getText().toString());
+				mTopTextComparatorStr = getTextComparator(mEditTextTop.getText().toString());
+			}
+		}
 	}
 
 	@Override
@@ -130,6 +167,10 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		mAPIData = mDataProvider.getSettings().getTranslateAPIData();
 		mReceiver = mDataProvider.getInternetReceiver();
 		mDataProvider.addDataProviderNotification(this);
+
+		mTopTextPoolPeriodInMs = getContext().getResources().getInteger(R.integer.auto_translate_timeout);
+
+		updateTranslateButtonHistoryAccess();
 
 		updateViewData();
 		mEditTextTop.addTextChangedListener(mTextWatcherTop);
@@ -166,8 +207,20 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 	{
 		super.onPause();
 
-		mAPIData.setSrcText(mEditTextTop.getText().toString());
-		mAPIData.setDestText(mEditTextBottom.getText().toString());
+		updateApiDataSettingsText();
+	}
+
+	private void updateApiDataSettingsText()
+	{
+		if (mAPIData != null)
+		{
+			mAPIData.setSrcText(mEditTextTop.getText().toString().trim());
+			mAPIData.setDestText(mEditTextBottom.getText().toString().trim());
+			if (mEditTextTop.getText().toString().trim().length() == 0)
+			{
+				mAPIData.setDetectedDirection("");
+			}
+		}
 	}
 
 	@Override
@@ -189,20 +242,55 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		updateInfoTexts();
 	}
 
+	private void updateTranslateButtonHistoryAccess()
+	{
+		if (mBtnTranslate != null && mAPIData != null)
+		{
+			if (mAPIData.isCurrentTextInHistory())
+			{
+				mBtnTranslate.setVisibility(View.GONE);
+			}
+			else
+			{
+				mBtnTranslate.setVisibility(View.VISIBLE);
+			}
+		}
+	}
+
+	private void setTopText(String src_text)
+	{
+		if (mEditTextTop != null)
+		{
+			mInternalTextUpdateFlag = true;
+			mEditTextTop.setText(src_text);
+		}
+
+	}
+
+	private void setBottomText(String dest_text)
+	{
+		if (mEditTextBottom != null)
+		{
+			mEditTextBottom.setText(dest_text);
+		}
+	}
+
 	private void updateViewData()
 	{
-		mEditTextTop.setText(mAPIData.getSrcText());
-		mEditTextBottom.setText(mAPIData.getDestText());
+		setTopText(mAPIData.getSrcText());
+		setBottomText(mAPIData.getDestText());
 		updateTextComparators();
+		updateTranslateButtonHistoryAccess();
 	}
 
 	private void updateInfoTexts()
 	{
+		updateTranslateButtonHistoryAccess();
 		if (mTextViewTopTextInfo != null && mTextViewBottomTextInfo != null)
 		{
 			String direction = mAPIData.getTranslateDirection();
-			setSourceTextInfo(mAPIData.decode(YandexTranslateAPIData.src(direction), false));
-			setDestinationTextInfo(mAPIData.decode(YandexTranslateAPIData.dest(direction), true));
+			setSourceTextInfo(direction, mAPIData.decode(YandexTranslateAPIData.src(direction), false));
+			setDestinationTextInfo(direction, mAPIData.decode(YandexTranslateAPIData.dest(direction), true));
 		}
 		if (mReceiver != null)
 		{
@@ -212,7 +300,8 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 
 	private boolean isTopTextChanged()
 	{
-		return mWordsCount != wordsCount(mEditTextTop.getText().toString().trim()) || !mTopTextComparatorStr.equals(getTextComparator(mEditTextTop.getText().toString()));
+		String top = mEditTextTop.getText().toString().trim();
+		return top.length() > 0 && !(mWordsCount == wordsCount(top) && mTopTextComparatorStr.equals(getTextComparator(mEditTextTop.getText().toString())));
 	}
 
 	private void doTranslateText()
@@ -226,11 +315,16 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 
 	private void doSaveHistory(String src_text, String dest_text)
 	{
-		if (src_text.length() > 0 && dest_text.length() > 0)
+		if (mAPIData != null && !mAPIData.isCurrentTextInHistory() && mAPIData.isRequiredSaveHistory() &&
+				mDataProvider != null && !mDataProvider.getTranslateAPI().isServiceBusy() && src_text.length() > 0 && dest_text.length() > 0)
 		{
+			mAPIData.setRequiredSaveHistory(false);
+
 			// save history data
 			mDataProvider.getLocalDataBase().addToHistory(mDataProvider.getTranslateAPI().getTranslateDirection(), src_text, dest_text);
+			mAPIData.setCurrentTextInHistory(true);
 		}
+		updateTranslateButtonHistoryAccess();
 	}
 
 	private String change_text(String s)
@@ -244,15 +338,36 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		return s;
 	}
 
-	public void setSourceTextInfo(String lang_name)
+	public void setSourceTextInfo(String dir, String lang_name)
 	{
-		if (mTextViewTopTextInfo != null && lang_name != null)
+		if (mTextViewTopTextInfo != null && dir != null && lang_name != null)
 		{
-			mTextViewTopTextInfo.setText(String.format("Текст на %s языке", change_text(lang_name)));
+			if (YandexTranslateAPIData.src(dir).equals(YandexTranslateAPIData.dest(dir)))
+			{
+				if (mEditTextTop != null && mEditTextTop.getText().toString().trim().length() > 0)
+				{
+					if (mAPIData != null && mAPIData.getDetectedDirection().length() > 0)
+					{
+						mTextViewTopTextInfo.setText(String.format("Исходный язык определен как: %s", mAPIData.decode(YandexTranslateAPIData.src(mAPIData.getDetectedDirection()), false)));
+					}
+					else
+					{
+						mTextViewTopTextInfo.setText("Текст на неизвестном языке");
+					}
+				}
+				else
+				{
+					mTextViewTopTextInfo.setText("Ввведите текст для перевода");
+				}
+			}
+			else
+			{
+				mTextViewTopTextInfo.setText(String.format("Текст на %s языке", change_text(lang_name)));
+			}
 		}
 	}
 
-	public void setDestinationTextInfo(String lang_name)
+	public void setDestinationTextInfo(String dir, String lang_name)
 	{
 		if (mTextViewBottomTextInfo != null && lang_name != null)
 		{
@@ -288,37 +403,51 @@ public class MainFragment extends Fragment implements InternetReceiverNotificati
 		}
 	}
 
-	//@OnClick(R.id.fragment_main_btn_translate)
 	public void onButtonClickTranslate(View view)
 	{
 		mHandler.removeCallbacks(mRunnableTextTop);
-		doTranslateText();
-	}
-
-	@Override
-	public void onSupportedLangsUpdate(YandexTranslateAPITask task, Set<String> dirs, Map<String, String> langs)
-	{
-
-	}
-
-	@Override
-	public void onDetectedLangUpdate(YandexTranslateAPITask task, String detected_lang)
-	{
-
-	}
-
-	@Override
-	public void onTranslationUpdate(YandexTranslateAPITask task, String detected_lang, String detected_dir, String text)
-	{
-		if (mEditTextBottom != null)
+		if (mDataProvider != null && mAPIData != null)
 		{
-			mEditTextBottom.setText(text);
-			doSaveHistory(mDataProvider.getTranslateAPI().getLastSourceText(), text);
+			if (!mAPIData.isCurrentTextInHistory())
+			{
+				mAPIData.setRequiredSaveHistory(true);
+			}
+
+			if (isTopTextChanged())
+			{
+				doTranslateText();
+			}
+			else
+			{
+				doSaveHistory(mDataProvider.getTranslateAPI().getLastSourceText(), mDataProvider.getTranslateAPI().getLastResultText());
+			}
 		}
 	}
 
 	@Override
-	public void onHttpRequestResultError(YandexTranslateAPITask task, int http_status_code)
+	public void onSupportedLangsUpdate(YandexTranslateAPI api, Set<String> dirs, Map<String, String> langs)
+	{
+
+	}
+
+	@Override
+	public void onDetectedLangUpdate(YandexTranslateAPI api, String detected_lang)
+	{
+
+	}
+
+	@Override
+	public void onTranslationUpdate(YandexTranslateAPI api, String detected_lang, String detected_dir, String text)
+	{
+		if (mEditTextBottom != null)
+		{
+			mEditTextBottom.setText(text);
+			updateInfoTexts();
+		}
+	}
+
+	@Override
+	public void onHttpRequestResultError(YandexTranslateAPI api, int http_status_code, String message)
 	{
 
 	}

@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.data;
 
 import java.util.ArrayList;
 import java.util.List;

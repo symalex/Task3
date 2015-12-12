@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.ui.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +11,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.symbysoft.task3.MainApp;
+import com.symbysoft.task3.R;
+import com.symbysoft.task3.data.DataProvider;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;

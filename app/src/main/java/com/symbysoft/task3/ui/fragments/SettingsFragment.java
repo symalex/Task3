@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.ui.fragments;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -7,6 +7,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,11 +24,21 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.symbysoft.task3.data.DataProvider;
+import com.symbysoft.task3.data.SettingsProvider;
+import com.symbysoft.task3.ui.activities.MainActivity;
+import com.symbysoft.task3.MainApp;
+import com.symbysoft.task3.R;
+import com.symbysoft.task3.network.YandexTranslateAPIData;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class SettingsFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+
+public class SettingsFragment extends Fragment implements OnCheckedChangeListener, OnItemSelectedListener
 {
 	public static final String FTAG = "settings_fragment";
 
@@ -51,6 +64,27 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 	private SettingsProvider mSettings;
 	private YandexTranslateAPIData mAPIData;
 
+	private String mInitialApiKey, mInitialDirection;
+
+	private final TextWatcher mTextWatcherTop = new TextWatcher()
+	{
+		@Override
+		public void beforeTextChanged(CharSequence s, int start, int count, int after)
+		{
+		}
+
+		@Override
+		public void onTextChanged(CharSequence s, int start, int before, int count)
+		{
+		}
+
+		@Override
+		public void afterTextChanged(Editable s)
+		{
+			updateChanging();
+		}
+	};
+
 	public static Fragment newInstance()
 	{
 		return new SettingsFragment();
@@ -65,7 +99,14 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 		mProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
 		mSettings = mProvider.getSettings();
 		mAPIData = mSettings.getTranslateAPIData();
+
+		// save initial settings
+		mInitialApiKey = mAPIData.getApiKey();
+		mDirection = mInitialDirection = mAPIData.getTranslateDirection();
+		updateInitialSourceLang(mDirection);
+
 		mApiKeyText.setText(mAPIData.getApiKey());
+		mApiKeyText.addTextChangedListener(mTextWatcherTop);
 
 		mCheckboxAutoDetect.setOnCheckedChangeListener(this);
 		mSpinnerSourceLanguage.setOnItemSelectedListener(this);
@@ -74,6 +115,8 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 		mCheckboxAutoDetect.setChecked(mAPIData.getTranslateDirection().length() <= 2);
 		setSpinnersDropDownLists(mAPIData.getTranslateDirection());
 		setHasOptionsMenu(true);
+
+		updateChanging();
 
 		return view;
 	}
@@ -84,17 +127,39 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 		if (activity instanceof MainActivity)
 		{
 			((MainActivity) activity).navigateFragment(MainActivity.FragmentPage.MAIN_FRAGMENT);
-			//((MainActivity) activity).setSourceTextInfo((String) mSpinnerSourceLanguage.getSelectedItem());
-			//((MainActivity) activity).setDestinationTextInfo((String) mSpinnerResultLanguage.getSelectedItem());
 		}
+	}
+
+	private boolean isDataChanged()
+	{
+		return !(
+				mInitialApiKey.equals(mApiKeyText.getText().toString().trim()) && mInitialDirection.equals(mDirection)
+		);
+	}
+
+	private void updateChanging()
+	{
+		mBtnOk.setEnabled(isDataChanged());
+	}
+
+	private void updateInitialSourceLang(String dir)
+	{
+		//mLastSourceLang = YandexTranslateAPIData.src(dir);
 	}
 
 	@OnClick(R.id.fragment_settings_btn_ok)
 	public void onButtonClickOk(View view)
 	{
-		mAPIData.setApiKey(mApiKeyText.getText().toString());
-		mAPIData.setTranslateDirection(mDirection);
-		mProvider.getTranslateAPI().setTranslateDirection(mDirection);
+		if (isDataChanged())
+		{
+			mAPIData.setApiKey(mApiKeyText.getText().toString().trim());
+			mAPIData.setTranslateDirection(mDirection);
+			mProvider.getTranslateAPI().setApiKey(mApiKeyText.getText().toString().trim());
+			mProvider.getTranslateAPI().setTranslateDirection(mDirection);
+			mAPIData.setDisableComparatorUpdateOnce(true);
+
+			//mAPIData.setRequiredSaveHistory(true);
+		}
 		CloseSettings();
 	}
 
@@ -109,7 +174,8 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 	{
 		if (!mCheckboxAutoDetect.isChecked())
 		{
-			setSpinnersDropDownLists(get_destination_spinner_selected_lang() + "-" + get_source_spinner_selected_lang());
+			setSpinnersDropDownLists(YandexTranslateAPIData.direction(get_destination_spinner_selected_lang(), get_source_spinner_selected_lang()));
+			updateChanging();
 		}
 	}
 
@@ -122,8 +188,10 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 		}
 		else
 		{
-			setSpinnersDropDownLists(get_source_spinner_selected_lang() + "-" + get_destination_spinner_selected_lang());
+			//setSpinnersDropDownLists(YandexTranslateAPIData.direction(mLastSourceLang, get_destination_spinner_selected_lang()));
+			setSpinnersDropDownLists(YandexTranslateAPIData.direction(get_source_spinner_selected_lang(), get_destination_spinner_selected_lang()));
 		}
+		updateChanging();
 	}
 
 	private String get_source_spinner_selected_lang()
@@ -191,9 +259,10 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 		ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, destinations);
 		mSpinnerResultLanguage.setAdapter(spinnerArrayAdapter);
 
-		if (destinations.length > 0 && !select_spinner_by_name(mSpinnerResultLanguage, destinations, mSettings.getTranslateAPIData().getLangs().get(YandexTranslateAPIData.dest(direction))))
+		String dst_name = mSettings.getTranslateAPIData().getLangs().get(YandexTranslateAPIData.dest(direction));
+		if (destinations.length > 0 && !select_spinner_by_name(mSpinnerResultLanguage, destinations, dst_name))
 		{
-			Snackbar.make(getView(), "Destination Language not supported!", Snackbar.LENGTH_LONG).show();
+			Snackbar.make(getView(), String.format("Destination Language: %s not supported!", dst_name), Snackbar.LENGTH_LONG).show();
 			mSpinnerResultLanguage.setSelection(0);
 		}
 	}
@@ -212,6 +281,7 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 
 			update_source_language_drop_down_spinner(direction);
 			update_destination_language_drop_down_spinner(direction);
+			updateInitialSourceLang(direction);
 
 			mDirection = direction;
 		}
@@ -255,8 +325,9 @@ public class SettingsFragment extends Fragment implements CompoundButton.OnCheck
 				}
 				else
 				{
-					setSpinnersDropDownLists(get_source_spinner_selected_lang() + "-" + get_destination_spinner_selected_lang());
+					setSpinnersDropDownLists(YandexTranslateAPIData.direction(get_source_spinner_selected_lang(), get_destination_spinner_selected_lang()));
 				}
+				updateChanging();
 				break;
 		}
 	}

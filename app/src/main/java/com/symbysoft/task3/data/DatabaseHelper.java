@@ -1,4 +1,4 @@
-package com.symbysoft.task3;
+package com.symbysoft.task3.data;
 
 // http://stackoverflow.com/questions/9290394/sqlitedatabase-getwritabledatabase-not-working
 
@@ -69,12 +69,21 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
 	{
-		// Drop older table if existed
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_FAVORITE);
+		switch (oldVersion)
+		{
+			case 0:
+				// newer execute
+				db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
+				db.execSQL("DROP TABLE IF EXISTS " + TABLE_FAVORITE);
+				onCreate(db);
+			case 1:
+				// upgrade version 1 -> 2
+			case 2:
+				// upgrade version 2 -> 3
+			case 3:
 
-		// Create tables again
-		onCreate(db);
+				break;
+		}
 	}
 
 	public int getHistoryRecordCount()

@@ -98,9 +98,9 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 		mNavigationView.setNavigationItemSelectedListener(this);
 
 		mDataProvider = ((MainApp) getApplication()).getDataProvider();
-		mDataProvider.addDataProviderNotification(this);
-		mDataProvider.getInternetReceiver().addInternetReceiverNotification(this);
-		mDataProvider.getTranslateAPI().addAPINotification(this);
+		mDataProvider.addDataProviderListener(this);
+		mDataProvider.getInternetReceiver().addInternetReceiverListener(this);
+		mDataProvider.getTranslateAPI().addApiListener(this);
 
 		// create fragment page
 		navigateFragment(mDataProvider.getActivePage());
@@ -133,9 +133,9 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 	{
 		if (mDataProvider != null && mExitFlag)
 		{
-			mDataProvider.getInternetReceiver().removeInternetReceiverNotification(this);
-			mDataProvider.removeDataProviderNotification(this);
-			mDataProvider.getTranslateAPI().removeAPINotification(this);
+			mDataProvider.getInternetReceiver().removeInternetReceiverListener(this);
+			mDataProvider.removeDataProviderListener(this);
+			mDataProvider.getTranslateAPI().removeApiListener(this);
 			mDataProvider.onDestroy();
 		}
 		super.onDestroy();

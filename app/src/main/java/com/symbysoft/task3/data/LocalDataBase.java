@@ -7,9 +7,11 @@ import java.util.List;
 import android.content.ContentValues;
 import android.content.Context;
 
+import com.symbysoft.task3.data.LocalDataBaseTask.LocalDataBaseListener;
+
 // http://startandroid.ru/ru/uroki/vse-uroki-spiskom/112-urok-53-simplecursortreeadapter-primer-ispolzovanija.html
 
-public class LocalDataBase implements LocalDataBaseTask.LocalDataBaseNotification
+public class LocalDataBase implements LocalDataBaseListener
 {
 	// Database Name
 	private static final String DATABASE_NAME = "history.db";
@@ -35,7 +37,7 @@ public class LocalDataBase implements LocalDataBaseTask.LocalDataBaseNotificatio
 
 	private final Context mCtx;
 	private DatabaseHelper mDBHelper;
-	private final LinkedHashSet<LocalDataBaseTask.LocalDataBaseNotification> mDBNotifications;
+	private final LinkedHashSet<LocalDataBaseListener> mListeners;
 
 	private LocalDataBaseTask mTask;
 	private final LinkedList<ContentValues> mActions;
@@ -45,26 +47,26 @@ public class LocalDataBase implements LocalDataBaseTask.LocalDataBaseNotificatio
 		return mDBHelper;
 	}
 
-	public boolean isDBNotificationSet(LocalDataBaseTask.LocalDataBaseNotification DBNotification)
+	public boolean isListenerSet(LocalDataBaseListener listener)
 	{
-		return mDBNotifications.contains(DBNotification);
+		return mListeners.contains(listener);
 	}
 
-	public void addDBNotification(LocalDataBaseTask.LocalDataBaseNotification DBNotification)
+	public void addListener(LocalDataBaseListener listener)
 	{
-		mDBNotifications.add(DBNotification);
+		mListeners.add(listener);
 	}
 
-	public void removeDBNotification(LocalDataBaseTask.LocalDataBaseNotification DBNotification)
+	public void removeListener(LocalDataBaseListener listener)
 	{
-		mDBNotifications.remove(DBNotification);
+		mListeners.remove(listener);
 	}
 
 	private LocalDataBase(Context ctx)
 	{
 		mCtx = ctx;
 		mActions = new LinkedList<>();
-		mDBNotifications = new LinkedHashSet<>();
+		mListeners = new LinkedHashSet<>();
 	}
 
 	public static LocalDataBase newInstance(Context ctx)
@@ -123,42 +125,42 @@ public class LocalDataBase implements LocalDataBaseTask.LocalDataBaseNotificatio
 				case RA_READ_FAVORITE:
 					cancelTask(mTask);
 					mTask = new LocalDataBaseTask(mDBHelper);
-					mTask.setDBNotification(this);
+					mTask.setListener(this);
 					mTask.getFavoriteData();
 					break;
 
 				case RA_READ_HISTORY:
 					cancelTask(mTask);
 					mTask = new LocalDataBaseTask(mDBHelper);
-					mTask.setDBNotification(this);
+					mTask.setListener(this);
 					mTask.getHistoryData();
 					break;
 
 				case RA_ADD_HISTORY:
 					cancelTask(mTask);
 					mTask = new LocalDataBaseTask(mDBHelper);
-					mTask.setDBNotification(this);
+					mTask.setListener(this);
 					mTask.addToHistory((String) cv.get(DatabaseHelper.DIRECTION), (String) cv.get(DatabaseHelper.HIST_SOURCE), (String) cv.get(DatabaseHelper.HIST_DEST));
 					break;
 
 				case RA_DEL_HISTORY:
 					cancelTask(mTask);
 					mTask = new LocalDataBaseTask(mDBHelper);
-					mTask.setDBNotification(this);
+					mTask.setListener(this);
 					mTask.delFromHistory(cv.getAsLong(DatabaseHelper.KEY_ID));
 					break;
 
 				case RA_ADD_FAVORITE:
 					cancelTask(mTask);
 					mTask = new LocalDataBaseTask(mDBHelper);
-					mTask.setDBNotification(this);
+					mTask.setListener(this);
 					mTask.addToFavorite(cv.getAsLong(DatabaseHelper.HIST_ID));
 					break;
 
 				case RA_DEL_FAVORITE:
 					cancelTask(mTask);
 					mTask = new LocalDataBaseTask(mDBHelper);
-					mTask.setDBNotification(this);
+					mTask.setListener(this);
 					mTask.delFromFavorite(cv.getAsLong(DatabaseHelper.KEY_ID));
 					break;
 			}
@@ -222,34 +224,34 @@ public class LocalDataBase implements LocalDataBaseTask.LocalDataBaseNotificatio
 	private void notifyAll(RuningAction action, LocalDataBaseTask task, List<ContentValues> list)
 	{
 		mTask = null;
-		for (LocalDataBaseTask.LocalDataBaseNotification notify : mDBNotifications)
+		for (LocalDataBaseListener listener : mListeners)
 		{
-			if (notify != null)
+			if (listener != null)
 			{
 				switch (action)
 				{
 					case RA_READ_FAVORITE:
-						notify.onDBReadFavoriteComplette(task, list);
+						listener.onDBReadFavoriteComplette(task, list);
 						break;
 
 					case RA_READ_HISTORY:
-						notify.onDBReadHistoryComplette(task, list);
+						listener.onDBReadHistoryComplette(task, list);
 						break;
 
 					case RA_ADD_HISTORY:
-						notify.onDBAddHistoryComplette(task, list);
+						listener.onDBAddHistoryComplette(task, list);
 						break;
 
 					case RA_DEL_HISTORY:
-						notify.onDBDelHistoryComplette(task, list);
+						listener.onDBDelHistoryComplette(task, list);
 						break;
 
 					case RA_ADD_FAVORITE:
-						notify.onDBAddFavoriteComplette(task, list);
+						listener.onDBAddFavoriteComplette(task, list);
 						break;
 
 					case RA_DEL_FAVORITE:
-						notify.onDBDelFavoriteComplette(task, list);
+						listener.onDBDelFavoriteComplette(task, list);
 						break;
 				}
 			}

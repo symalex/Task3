@@ -11,8 +11,9 @@ import android.content.IntentFilter;
 import com.symbysoft.task3.ui.activities.MainActivity;
 import com.symbysoft.task3.network.InternetReceiver;
 import com.symbysoft.task3.network.YandexTranslateAPI;
+import com.symbysoft.task3.data.LocalDataBaseTask.LocalDataBaseListener;
 
-public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
+public class DataProvider implements LocalDataBaseListener
 {
 	private MainActivity.FragmentPage mActivePage = MainActivity.FragmentPage.MAIN_FRAGMENT;
 	private final Context mCtx;
@@ -25,6 +26,9 @@ public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 	private YandexTranslateAPI mTranslateAPI;
 	private LocalDataBase mLocalDataBase;
 	private final LinkedHashSet<DataProviderListener> mListeners;
+	private int mHistorySelectedItemPosition = -1;
+	private int mFavoriteSelectedItemPosition = -1;
+	private boolean mForceTextTranslateFlag = false;
 
 	public interface DataProviderListener
 	{
@@ -59,12 +63,12 @@ public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 		return mTranslateAPI;
 	}
 
-	public void addDataProviderNotification(DataProviderListener listener)
+	public void addDataProviderListener(DataProviderListener listener)
 	{
 		mListeners.add(listener);
 	}
 
-	public void removeDataProviderNotification(DataProviderListener listener)
+	public void removeDataProviderListener(DataProviderListener listener)
 	{
 		mListeners.remove(listener);
 	}
@@ -82,6 +86,36 @@ public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 	public LocalDataBase getLocalDataBase()
 	{
 		return mLocalDataBase;
+	}
+
+	public int getHistorySelectedItemPosition()
+	{
+		return mHistorySelectedItemPosition;
+	}
+
+	public void setHistorySelectedItemPosition(int historySelectedItemPosition)
+	{
+		mHistorySelectedItemPosition = historySelectedItemPosition;
+	}
+
+	public int getFavoriteSelectedItemPosition()
+	{
+		return mFavoriteSelectedItemPosition;
+	}
+
+	public void setFavoriteSelectedItemPosition(int favoriteSelectedItemPosition)
+	{
+		mFavoriteSelectedItemPosition = favoriteSelectedItemPosition;
+	}
+
+	public boolean isForceTextTranslateFlag()
+	{
+		return mForceTextTranslateFlag;
+	}
+
+	public void setForceTextTranslateFlag(boolean forceTextTranslateFlag)
+	{
+		mForceTextTranslateFlag = forceTextTranslateFlag;
 	}
 
 	private DataProvider(Context ctx)
@@ -113,7 +147,7 @@ public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 		// translate API
 		mTranslateAPI = YandexTranslateAPI.newInstance(mCtx);
 		mLocalDataBase = LocalDataBase.newInstance(mCtx);
-		mLocalDataBase.addDBNotification(this);
+		mLocalDataBase.addListener(this);
 	}
 
 	private void registerInternetReceiver()
@@ -144,7 +178,7 @@ public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 
 		if (mLocalDataBase != null)
 		{
-			mLocalDataBase.removeDBNotification(this);
+			mLocalDataBase.removeListener(this);
 			mLocalDataBase.close();
 		}
 	}
@@ -225,6 +259,32 @@ public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 		mLocalDataBase.readFavorite();
 	}
 
+	public int findElement(ArrayList<ContentValues> result, String key, long value)
+	{
+		int index;
+		if (result.size() > 0)
+		{
+			index = 0;
+			for (ContentValues cv : result)
+			{
+				if (cv.getAsLong(key) == value)
+				{
+					break;
+				}
+				index++;
+			}
+			if (index >= result.size())
+			{
+				index = -1;
+			}
+		}
+		else
+		{
+			index = -1;
+		}
+		return index;
+	}
+
 	private int findElement(ArrayList<ContentValues> result, List<ContentValues> list, String key, boolean is_long)
 	{
 		int index;
@@ -283,7 +343,7 @@ public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 	private void removeIfFound(ArrayList<ContentValues> result, List<ContentValues> list, String key)
 	{
 		int index = findElement(result, list, key, true);
-		if (index >= 0)
+		if (index != -1)
 		{
 			result.remove(index);
 		}
@@ -306,19 +366,58 @@ public class DataProvider implements LocalDataBaseTask.LocalDataBaseNotification
 	@Override
 	public void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		removeIfFound(mHistoryList, list, DatabaseHelper.KEY_ID);
+		if (list.size() > 0)
+		{
+			long in_fav_id = 0;
+			int index = findElement(mHistoryList, list, DatabaseHelper.KEY_ID, true);
+			if (index != -1)
+			{
+				in_fav_id = mHistoryList.get(index).getAsLong(DatabaseHelper.IN_FAVORITE_ID);
+
+				//removeIfFound(mHistoryList, list, DatabaseHelper.KEY_ID);
+				mHistoryList.remove(index);
+			}
+
+			// delete related favorite id
+			index = findElement(mFavoriteList, DatabaseHelper.KEY_ID, in_fav_id);
+			if (index != -1)
+			{
+				mFavoriteList.remove(index);
+			}
+		}
 	}
 
 	@Override
 	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		addIfNotFound(mFavoriteList, list, DatabaseHelper.HIST_SOURCE);
+		if (list.size() > 0)
+		{
+			addIfNotFound(mFavoriteList, list, DatabaseHelper.HIST_SOURCE);
+			ContentValues cv = list.get(0);
+			long in_fav_id = cv.getAsLong(DatabaseHelper.KEY_ID);
+			int i = findElement(mHistoryList, DatabaseHelper.KEY_ID, cv.getAsLong(DatabaseHelper.HIST_ID));
+			if (i != -1)
+			{
+				cv = mHistoryList.get(i);
+				cv.put(DatabaseHelper.IN_FAVORITE_ID, in_fav_id);
+			}
+		}
 	}
 
 	@Override
 	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		removeIfFound(mFavoriteList, list, DatabaseHelper.KEY_ID);
+		if (list.size() > 0)
+		{
+			removeIfFound(mFavoriteList, list, DatabaseHelper.KEY_ID);
+
+			//[IN_FAVORITE_ID] = 0
+			int i = findElement(mHistoryList, DatabaseHelper.IN_FAVORITE_ID, list.get(0).getAsLong(DatabaseHelper.KEY_ID));
+			if (i != -1)
+			{
+				mHistoryList.get(i).put(DatabaseHelper.IN_FAVORITE_ID, 0);
+			}
+		}
 	}
 
 	@Override

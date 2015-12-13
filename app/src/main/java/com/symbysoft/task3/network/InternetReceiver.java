@@ -38,12 +38,12 @@ public class InternetReceiver extends BroadcastReceiver
 		mCtx = ctx;
 	}
 
-	public void addInternetReceiverNotification(InternetReceiverListener listener)
+	public void addInternetReceiverListener(InternetReceiverListener listener)
 	{
 		mListeners.add(listener);
 	}
 
-	public void removeInternetReceiverNotification(InternetReceiverListener listener)
+	public void removeInternetReceiverListener(InternetReceiverListener listener)
 	{
 		mListeners.remove(listener);
 	}

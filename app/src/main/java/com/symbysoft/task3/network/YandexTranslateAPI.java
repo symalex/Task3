@@ -32,12 +32,12 @@ public class YandexTranslateAPI
 
 	private final LinkedHashSet<YandexTranslateApiListener> mListeners;
 
-	public void addAPINotification(YandexTranslateApiListener listener)
+	public void addApiListener(YandexTranslateApiListener listener)
 	{
 		mListeners.add(listener);
 	}
 
-	public void removeAPINotification(YandexTranslateApiListener listener)
+	public void removeApiListener(YandexTranslateApiListener listener)
 	{
 		mListeners.remove(listener);
 	}

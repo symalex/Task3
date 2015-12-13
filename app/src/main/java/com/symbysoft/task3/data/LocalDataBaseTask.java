@@ -10,7 +10,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 {
 	private static final String TAG = "LocalDataBaseTask";
 
-	public interface LocalDataBaseNotification
+	public interface LocalDataBaseListener
 	{
 		void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list);
 
@@ -42,21 +42,21 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 	private final DatabaseHelper mDbHelper;
 	private final ContentValues mValues;
 
-	private LocalDataBaseNotification mDBNotification;
+	private LocalDataBaseListener mListener;
 
 	public LocalDataBaseAction getAction()
 	{
 		return mAction;
 	}
 
-	public LocalDataBaseNotification getDBNotification()
+	public LocalDataBaseListener getListener()
 	{
-		return mDBNotification;
+		return mListener;
 	}
 
-	public void setDBNotification(LocalDataBaseNotification DBNotification)
+	public void setListener(LocalDataBaseListener listener)
 	{
-		mDBNotification = DBNotification;
+		mListener = listener;
 	}
 
 	LocalDataBaseTask(DatabaseHelper db_helper)
@@ -153,44 +153,44 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 		switch (mAction)
 		{
 			case DB_ACTION_READ_FAVORITE_DATA:
-				if (mDBNotification != null)
+				if (mListener != null)
 				{
-					mDBNotification.onDBReadFavoriteComplette(this, list);
+					mListener.onDBReadFavoriteComplette(this, list);
 				}
 				break;
 
 			case DB_ACTION_READ_HISTORY_DATA:
-				if (mDBNotification != null)
+				if (mListener != null)
 				{
-					mDBNotification.onDBReadHistoryComplette(this, list);
+					mListener.onDBReadHistoryComplette(this, list);
 				}
 				break;
 
 			case DB_ACTION_ADD_HISTORY:
-				if (mDBNotification != null)
+				if (mListener != null)
 				{
-					mDBNotification.onDBAddHistoryComplette(this, list);
+					mListener.onDBAddHistoryComplette(this, list);
 				}
 				break;
 
 			case DB_ACTION_DEL_HISTORY:
-				if (mDBNotification != null)
+				if (mListener != null)
 				{
-					mDBNotification.onDBDelHistoryComplette(this, list);
+					mListener.onDBDelHistoryComplette(this, list);
 				}
 				break;
 
 			case DB_ACTION_ADD_FAVORITE:
-				if (mDBNotification != null)
+				if (mListener != null)
 				{
-					mDBNotification.onDBAddFavoriteComplette(this, list);
+					mListener.onDBAddFavoriteComplette(this, list);
 				}
 				break;
 
 			case DB_ACTION_DEL_FAVORITE:
-				if (mDBNotification != null)
+				if (mListener != null)
 				{
-					mDBNotification.onDBDelFavoriteComplette(this, list);
+					mListener.onDBDelFavoriteComplette(this, list);
 				}
 				break;
 

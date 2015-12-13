@@ -22,6 +22,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	public static final String HIST_SOURCE = "src";
 	public static final String HIST_DEST = "dest";
 	public static final String DIRECTION = "dir";
+	public static final String IN_FAVORITE_ID = "in_fav_id";
 
 	public static final String COUNT = "count";
 	public static final String DOUBLE = "double";
@@ -106,6 +107,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		cv.put(HIST_DEST, dest_text);
 		long id = db.insert(TABLE_HISTORY, null, cv);
 		cv.put(KEY_ID, id);
+		cv.put(IN_FAVORITE_ID, 0);
 		return cv;
 	}
 
@@ -172,7 +174,9 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	public List<ContentValues> getHistoryData()
 	{
 		List<ContentValues> list = new ArrayList<>();
-		String selectQuery = "SELECT  * FROM " + TABLE_HISTORY;
+		String selectQuery = String.format("SELECT * FROM %s LEFT JOIN %s ON %s.%s = %s.%s", TABLE_HISTORY, TABLE_FAVORITE,
+				TABLE_HISTORY, KEY_ID, TABLE_FAVORITE, HIST_ID
+		);
 
 		SQLiteDatabase db = getReadableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -189,6 +193,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				cv.put(DIRECTION, cursor.getString(2));
 				cv.put(HIST_SOURCE, cursor.getString(3));
 				cv.put(HIST_DEST, cursor.getString(4));
+				cv.put(IN_FAVORITE_ID, cursor.getLong(5));
 				list.add(cv);
 				mHistoryCounter += 1;
 			}

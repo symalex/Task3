@@ -157,7 +157,7 @@ public class SettingsFragment extends Fragment implements OnCheckedChangeListene
 			mProvider.getTranslateAPI().setApiKey(mApiKeyText.getText().toString().trim());
 			mProvider.getTranslateAPI().setTranslateDirection(mDirection);
 			mAPIData.setDisableComparatorUpdateOnce(true);
-
+			mProvider.setForceTextTranslateFlag(true);
 			//mAPIData.setRequiredSaveHistory(true);
 		}
 		CloseSettings();
@@ -269,7 +269,7 @@ public class SettingsFragment extends Fragment implements OnCheckedChangeListene
 
 	private void setSpinnersDropDownLists(String direction)
 	{
-		if (mDirection != null && mDirection.equals(direction))
+		if (mDirection == null)
 		{
 			return;
 		}

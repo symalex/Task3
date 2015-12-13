@@ -51,7 +51,7 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 
 	// set from MainActivity
 	private FloatingActionButton mBtnTranslate;
-	private boolean mInternalTextUpdateFlag;
+	private boolean mInternalTextUpdateFlag = false;
 
 	private int mWordsCount = 0;
 	private String mTopTextComparatorStr = "";
@@ -96,9 +96,10 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 		@Override
 		public void afterTextChanged(Editable s)
 		{
-			if (!mInternalTextUpdateFlag)
+			if (!mInternalTextUpdateFlag || mDataProvider.isForceTextTranslateFlag())
 			{
 				mHandler.removeCallbacks(mRunnableTextTop);
+				mDataProvider.setForceTextTranslateFlag(false);
 				if (mEditTextTop.getText().toString().trim().length() > 0)
 				{
 					mHandler.postDelayed(mRunnableTextTop, mTopTextPoolPeriodInMs);
@@ -166,7 +167,7 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 		mDataProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
 		mAPIData = mDataProvider.getSettings().getTranslateAPIData();
 		mReceiver = mDataProvider.getInternetReceiver();
-		mDataProvider.addDataProviderNotification(this);
+		mDataProvider.addDataProviderListener(this);
 
 		mTopTextPoolPeriodInMs = getContext().getResources().getInteger(R.integer.auto_translate_timeout);
 
@@ -187,9 +188,9 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 
 		if (mDataProvider != null)
 		{
-			mDataProvider.addDataProviderNotification(this);
-			mDataProvider.getInternetReceiver().addInternetReceiverNotification(this);
-			mDataProvider.getTranslateAPI().addAPINotification(this);
+			mDataProvider.addDataProviderListener(this);
+			mDataProvider.getInternetReceiver().addInternetReceiverListener(this);
+			mDataProvider.getTranslateAPI().addApiListener(this);
 		}
 	}
 
@@ -228,9 +229,9 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 	{
 		if (mDataProvider != null)
 		{
-			mDataProvider.getTranslateAPI().removeAPINotification(this);
-			mDataProvider.getInternetReceiver().removeInternetReceiverNotification(this);
-			mDataProvider.removeDataProviderNotification(this);
+			mDataProvider.getTranslateAPI().removeApiListener(this);
+			mDataProvider.getInternetReceiver().removeInternetReceiverListener(this);
+			mDataProvider.removeDataProviderListener(this);
 		}
 
 		super.onStop();
@@ -264,7 +265,6 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 			mInternalTextUpdateFlag = true;
 			mEditTextTop.setText(src_text);
 		}
-
 	}
 
 	private void setBottomText(String dest_text)

@@ -21,4 +21,14 @@ public class MainApp extends Application
 		mDataProvider = DataProvider.getInstance(this);
 	}
 
+	@Override
+	public void onTerminate()
+	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.onDestroy();
+			mDataProvider = null;
+		}
+		super.onTerminate();
+	}
 }

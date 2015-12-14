@@ -18,6 +18,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -301,8 +302,13 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 		{
 			mDrawer.closeDrawer(GravityCompat.START);
 		}
+		else if( mFragment instanceof SettingsFragment || mFragment instanceof HistoryFragment || mFragment instanceof FavoriteFragment )
+		{
+			navigateFragment(FragmentPage.MAIN_FRAGMENT);
+		}
 		else
 		{
+			// in MainFragment
 			mExitFlag = true;
 			super.onBackPressed();
 		}

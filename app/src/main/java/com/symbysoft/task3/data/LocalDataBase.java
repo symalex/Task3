@@ -20,10 +20,6 @@ public class LocalDataBase implements LocalDataBaseListener
 	private static final int DATABASE_VERSION = 1;
 
 	private static final String ASYNC_ACTION = "action";
-	/*
-	public static final String ASYNC_FIELD_DIRECTION = "dir";
-	public static final String ASYNC_FIELD_SOURCE_TEXT = "src";
-	public static final String ASYNC_FIELD_DESTINATION_TEXT = "dest";*/
 
 	private enum RuningAction
 	{
@@ -37,6 +33,7 @@ public class LocalDataBase implements LocalDataBaseListener
 
 	private final Context mCtx;
 	private DatabaseHelper mDBHelper;
+	private DataBaseHelper mDbHelper;
 	private final LinkedHashSet<LocalDataBaseListener> mListeners;
 
 	private LocalDataBaseTask mTask;
@@ -77,12 +74,22 @@ public class LocalDataBase implements LocalDataBaseListener
 	public void open()
 	{
 		mDBHelper = new DatabaseHelper(mCtx, DATABASE_NAME, null, DATABASE_VERSION);
+		mDbHelper = new DataBaseHelper(mCtx);
 	}
 
 	public void close()
 	{
 		if (mDBHelper != null)
+		{
 			mDBHelper.close();
+			mDBHelper = null;
+		}
+
+		if (mDbHelper != null)
+		{
+			mDbHelper.close();
+			mDbHelper = null;
+		}
 	}
 
 	private void cancelTask(LocalDataBaseTask task)
@@ -124,42 +131,42 @@ public class LocalDataBase implements LocalDataBaseListener
 			{
 				case RA_READ_FAVORITE:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
 					mTask.setListener(this);
 					mTask.getFavoriteData();
 					break;
 
 				case RA_READ_HISTORY:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
 					mTask.setListener(this);
 					mTask.getHistoryData();
 					break;
 
 				case RA_ADD_HISTORY:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
 					mTask.setListener(this);
 					mTask.addToHistory((String) cv.get(DatabaseHelper.DIRECTION), (String) cv.get(DatabaseHelper.HIST_SOURCE), (String) cv.get(DatabaseHelper.HIST_DEST));
 					break;
 
 				case RA_DEL_HISTORY:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
 					mTask.setListener(this);
 					mTask.delFromHistory(cv.getAsLong(DatabaseHelper.KEY_ID));
 					break;
 
 				case RA_ADD_FAVORITE:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
 					mTask.setListener(this);
 					mTask.addToFavorite(cv.getAsLong(DatabaseHelper.HIST_ID));
 					break;
 
 				case RA_DEL_FAVORITE:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper);
+					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
 					mTask.setListener(this);
 					mTask.delFromFavorite(cv.getAsLong(DatabaseHelper.KEY_ID));
 					break;
@@ -221,7 +228,7 @@ public class LocalDataBase implements LocalDataBaseListener
 		startNextAction(cv);
 	}
 
-	private void notifyAll(RuningAction action, LocalDataBaseTask task, List<ContentValues> list)
+	private void notifyAll(RuningAction action, LocalDataBaseTask task, Object list)
 	{
 		mTask = null;
 		for (LocalDataBaseListener listener : mListeners)
@@ -231,27 +238,27 @@ public class LocalDataBase implements LocalDataBaseListener
 				switch (action)
 				{
 					case RA_READ_FAVORITE:
-						listener.onDBReadFavoriteComplete(task, list);
+						listener.onDBReadFavoriteComplete(task, (List<FavoriteRow>)list);
 						break;
 
 					case RA_READ_HISTORY:
-						listener.onDBReadHistoryComplete(task, list);
+						listener.onDBReadHistoryComplete(task, (List<HistoryRow>)list);
 						break;
 
 					case RA_ADD_HISTORY:
-						listener.onDBAddHistoryComplete(task, list);
+						listener.onDBAddHistoryComplete(task, (List<ContentValues>)list);
 						break;
 
 					case RA_DEL_HISTORY:
-						listener.onDBDelHistoryComplete(task, list);
+						listener.onDBDelHistoryComplete(task, (List<ContentValues>)list);
 						break;
 
 					case RA_ADD_FAVORITE:
-						listener.onDBAddFavoriteComplete(task, list);
+						listener.onDBAddFavoriteComplete(task, (List<ContentValues>)list);
 						break;
 
 					case RA_DEL_FAVORITE:
-						listener.onDBDelFavoriteComplete(task, list);
+						listener.onDBDelFavoriteComplete(task, (List<ContentValues>)list);
 						break;
 				}
 			}
@@ -260,13 +267,13 @@ public class LocalDataBase implements LocalDataBaseListener
 	}
 
 	@Override
-	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<FavoriteRow> list)
 	{
 		notifyAll(RuningAction.RA_READ_FAVORITE, task, list);
 	}
 
 	@Override
-	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<HistoryRow> list)
 	{
 		notifyAll(RuningAction.RA_READ_HISTORY, task, list);
 	}

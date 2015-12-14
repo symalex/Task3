@@ -35,15 +35,15 @@ public class DataProvider implements LocalDataBaseListener
 		void onLoadDataComplete();
 	}
 
-	private ArrayList<ContentValues> mHistoryList;
-	private ArrayList<ContentValues> mFavoriteList;
+	private ArrayList<HistoryRow> mHistoryList;
+	private ArrayList<FavoriteRow> mFavoriteList;
 
-	public ArrayList<ContentValues> getHistoryList()
+	public ArrayList<HistoryRow> getHistoryList()
 	{
 		return mHistoryList;
 	}
 
-	public ArrayList<ContentValues> getFavoriteList()
+	public ArrayList<FavoriteRow> getFavoriteList()
 	{
 		return mFavoriteList;
 	}
@@ -285,6 +285,20 @@ public class DataProvider implements LocalDataBaseListener
 		return index;
 	}
 
+	public FavoriteRow findById(ArrayList<FavoriteRow> rows, long id)
+	{
+		FavoriteRow res = null;
+		for (FavoriteRow row : rows)
+		{
+			if (row.getId() == id)
+			{
+				res = row;
+				break;
+			}
+		}
+		return res;
+	}
+
 	private int findElement(ArrayList<ContentValues> result, List<ContentValues> list, String key, boolean is_long)
 	{
 		int index;
@@ -351,16 +365,16 @@ public class DataProvider implements LocalDataBaseListener
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<FavoriteRow> list)
 	{
 		mProgress += 1;
-		mFavoriteList = (ArrayList<ContentValues>) ((ArrayList<ContentValues>) list).clone();
+		mFavoriteList = (ArrayList<FavoriteRow>) ((ArrayList<FavoriteRow>) list).clone();
 	}
 
 	@Override
 	public void onDBAddHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
-		addIfNotFound(mHistoryList, list, DatabaseHelper.HIST_SOURCE);
+		//addIfNotFound(mHistoryList, list, DatabaseHelper.HIST_SOURCE);
 	}
 
 	@Override
@@ -368,6 +382,7 @@ public class DataProvider implements LocalDataBaseListener
 	{
 		if (list.size() > 0)
 		{
+			/*
 			long in_fav_id = 0;
 			int index = findElement(mHistoryList, list, DatabaseHelper.KEY_ID, true);
 			if (index != -1)
@@ -379,11 +394,8 @@ public class DataProvider implements LocalDataBaseListener
 			}
 
 			// delete related favorite id
-			index = findElement(mFavoriteList, DatabaseHelper.KEY_ID, in_fav_id);
-			if (index != -1)
-			{
-				mFavoriteList.remove(index);
-			}
+			FavoriteRow row = findById(mFavoriteList, in_fav_id);
+			mFavoriteList.remove(row);*/
 		}
 	}
 
@@ -392,6 +404,7 @@ public class DataProvider implements LocalDataBaseListener
 	{
 		if (list.size() > 0)
 		{
+			/*
 			addIfNotFound(mFavoriteList, list, DatabaseHelper.HIST_SOURCE);
 			ContentValues cv = list.get(0);
 			long in_fav_id = cv.getAsLong(DatabaseHelper.KEY_ID);
@@ -400,7 +413,7 @@ public class DataProvider implements LocalDataBaseListener
 			{
 				cv = mHistoryList.get(i);
 				cv.put(DatabaseHelper.IN_FAVORITE_ID, in_fav_id);
-			}
+			}*/
 		}
 	}
 
@@ -409,6 +422,7 @@ public class DataProvider implements LocalDataBaseListener
 	{
 		if (list.size() > 0)
 		{
+			/*
 			removeIfFound(mFavoriteList, list, DatabaseHelper.KEY_ID);
 
 			//[IN_FAVORITE_ID] = 0
@@ -416,16 +430,16 @@ public class DataProvider implements LocalDataBaseListener
 			if (i != -1)
 			{
 				mHistoryList.get(i).put(DatabaseHelper.IN_FAVORITE_ID, 0);
-			}
+			}*/
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<HistoryRow> list)
 	{
 		mProgress = mProgressMax; //+=1+mLocalDataBase.getDBHelper().getProgress()
-		mHistoryList = (ArrayList<ContentValues>) ((ArrayList<ContentValues>) list).clone();
+		mHistoryList = (ArrayList<HistoryRow>) ((ArrayList<HistoryRow>) list).clone();
 	}
 
 }

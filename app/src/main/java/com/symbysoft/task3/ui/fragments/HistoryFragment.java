@@ -29,6 +29,8 @@ import com.symbysoft.task3.R;
 import com.symbysoft.task3.adapters.HistoryRecyclerAdapter;
 import com.symbysoft.task3.data.DataProvider;
 import com.symbysoft.task3.data.DatabaseHelper;
+import com.symbysoft.task3.data.FavoriteRow;
+import com.symbysoft.task3.data.HistoryRow;
 import com.symbysoft.task3.data.LocalDataBaseTask;
 import com.symbysoft.task3.data.LocalDataBaseTask.LocalDataBaseListener;
 import com.symbysoft.task3.ui.activities.MainActivity;
@@ -50,7 +52,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 
 	@Bind(R.id.fragment_history_list_view)
 	protected RecyclerView mRecyclerView;
-	private LinearLayoutManager mLayoutManager;
+	private RecyclerView.LayoutManager mLayoutManager;
 	private HistoryRecyclerAdapter mAdapter;
 
 	private MenuItem mMenuItemFavorite;
@@ -147,6 +149,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 			case R.id.item_history_btn_favorite:
 				if (mDataProvider != null && position >= 0 && position < mDataProvider.getHistoryList().size())
 				{
+					/*
 					ContentValues cv = mDataProvider.getHistoryList().get(position);
 					long in_fav_id = cv.getAsLong(DatabaseHelper.IN_FAVORITE_ID);
 					if (in_fav_id == 0)
@@ -157,7 +160,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 					{
 						// remove from favorites
 						mDataProvider.getLocalDataBase().delFromFavorite(in_fav_id);
-					}
+					}*/
 				}
 				break;
 		}
@@ -183,29 +186,30 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 
 	private void startAction(int action_id)
 	{
-		ContentValues cv;
+		HistoryRow hist_row;
 		int pos = mAdapter != null ? mAdapter.getSelectedPosition() : -1;
 		switch (action_id)
 		{
 			case R.id.history_menu_action_go:
 				if (pos >= 0 && pos < mDataProvider.getHistoryList().size() && getActivity() instanceof MainActivity)
 				{
-					((MainActivity) getActivity()).gotoMainAndSetData(mDataProvider.getHistoryList().get(pos));
+					//((MainActivity) getActivity()).gotoMainAndSetData(mDataProvider.getHistoryList().get(pos));
 				}
 				break;
 
 			case R.id.history_menu_action_bookmark:
 				if (pos >= 0 && pos < mDataProvider.getHistoryList().size())
 				{
-					cv = mDataProvider.getHistoryList().get(pos);
-					mDataProvider.getLocalDataBase().addToFavorite(cv.getAsLong(DatabaseHelper.KEY_ID));
+					hist_row = mDataProvider.getHistoryList().get(pos);
+					mDataProvider.getLocalDataBase().addToFavorite(hist_row.getId());
 				}
 				break;
 
 			case R.id.history_menu_action_delete:
 				if (pos >= 0 && pos < mDataProvider.getHistoryList().size())
 				{
-					mDataProvider.getLocalDataBase().delFromHistory(mDataProvider.getHistoryList().get(pos).getAsLong(DatabaseHelper.KEY_ID));
+					hist_row = mDataProvider.getHistoryList().get(pos);
+					mDataProvider.getLocalDataBase().delFromHistory(hist_row.getId());
 				}
 				break;
 		}
@@ -262,13 +266,13 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	}
 
 	@Override
-	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<HistoryRow> list)
 	{
 		updateList();
 	}
 
 	@Override
-	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<FavoriteRow> list)
 	{
 		updateList();
 	}

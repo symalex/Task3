@@ -21,11 +21,12 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter.ViewHolder;
+import com.symbysoft.task3.data.FavoriteRow;
 
 public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecyclerAdapter.ViewHolder>
 {
 	private int mSelectedPosition = -1;
-	private ArrayList<ContentValues> mList;
+	private ArrayList<FavoriteRow> mList;
 	private FavoriteRecyclerItemClickListener mOnItemClickListener;
 
 	public int getSelectedPosition()
@@ -90,7 +91,7 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 
 	}
 
-	public FavoriteRecyclerAdapter(ArrayList<ContentValues> list)
+	public FavoriteRecyclerAdapter(ArrayList<FavoriteRow> list)
 	{
 		mList = list;
 	}
@@ -114,11 +115,12 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 			holder.mRelativeLayout.setBackgroundColor(Color.parseColor("#FEFFFF"));
 		}
 		holder.mRelativeLayout.setSelected(mSelectedPosition == position);
-		ContentValues cv = mList.get(position);
+		FavoriteRow frow = mList.get(position);
+		/*
 		holder.mSrcTextView.setText(cv.getAsString(DatabaseHelper.HIST_SOURCE));
 		holder.mDestTextView.setText(cv.getAsString(DatabaseHelper.HIST_DEST));
-		holder.mBtnFavorite.setText(cv.getAsString(DatabaseHelper.DIRECTION));
-		holder.mBtnFavorite.setPressed(true);
+		holder.mBtnFavorite.setText(frow.getHistId(), cv.getAsString(DatabaseHelper.DIRECTION));
+		holder.mBtnFavorite.setPressed(true);*/
 	}
 
 	@Override

@@ -29,6 +29,8 @@ import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter;
 import com.symbysoft.task3.adapters.HistoryRecyclerAdapter;
 import com.symbysoft.task3.data.DataProvider;
 import com.symbysoft.task3.data.DatabaseHelper;
+import com.symbysoft.task3.data.FavoriteRow;
+import com.symbysoft.task3.data.HistoryRow;
 import com.symbysoft.task3.data.LocalDataBaseTask;
 import com.symbysoft.task3.data.LocalDataBaseTask.LocalDataBaseListener;
 import com.symbysoft.task3.ui.activities.MainActivity;
@@ -44,7 +46,7 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 
 	@Bind(R.id.fragment_history_list_view)
 	protected RecyclerView mRecyclerView;
-	private LinearLayoutManager mLayoutManager;
+	private RecyclerView.LayoutManager mLayoutManager;
 	private FavoriteRecyclerAdapter mAdapter;
 
 	private DataProvider mDataProvider;
@@ -165,14 +167,14 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 			case R.id.favorite_menu_action_go:
 				if (pos >= 0 && pos < mDataProvider.getFavoriteList().size() && getActivity() instanceof MainActivity)
 				{
-					((MainActivity) getActivity()).gotoMainAndSetData(mDataProvider.getFavoriteList().get(pos));
+					//((MainActivity) getActivity()).gotoMainAndSetData(mDataProvider.getFavoriteList().get(pos));
 				}
 				break;
 
 			case R.id.favorite_menu_action_delete:
 				if (pos >= 0 && pos < mDataProvider.getFavoriteList().size())
 				{
-					mDataProvider.getLocalDataBase().delFromFavorite(mDataProvider.getFavoriteList().get(pos).getAsLong(DatabaseHelper.KEY_ID));
+					//mDataProvider.getLocalDataBase().delFromFavorite(mDataProvider.getFavoriteList().get(pos).getAsLong(DatabaseHelper.KEY_ID));
 				}
 				break;
 		}
@@ -216,12 +218,12 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	}
 
 	@Override
-	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<HistoryRow> list)
 	{
 	}
 
 	@Override
-	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<FavoriteRow> list)
 	{
 		updateList();
 	}

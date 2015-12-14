@@ -129,7 +129,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		boolean found;
 
 		long id = -1;
-		selectQuery = String.format("SELECT  * FROM %s WHERE %s=%d", TABLE_FAVORITE, HIST_ID, hist_id);
+		selectQuery = String.format("SELECT * FROM %s WHERE %s=%d", TABLE_FAVORITE, HIST_ID, hist_id);
 		cursor = db.rawQuery(selectQuery, null);
 		found = cursor.moveToFirst();
 		if (found)

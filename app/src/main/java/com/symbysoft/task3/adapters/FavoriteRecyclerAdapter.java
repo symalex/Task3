@@ -116,11 +116,13 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 		}
 		holder.mRelativeLayout.setSelected(mSelectedPosition == position);
 		FavoriteRow frow = mList.get(position);
-		/*
-		holder.mSrcTextView.setText(cv.getAsString(DatabaseHelper.HIST_SOURCE));
-		holder.mDestTextView.setText(cv.getAsString(DatabaseHelper.HIST_DEST));
-		holder.mBtnFavorite.setText(frow.getHistId(), cv.getAsString(DatabaseHelper.DIRECTION));
-		holder.mBtnFavorite.setPressed(true);*/
+		if (frow.getHistory() != null)
+		{
+			holder.mSrcTextView.setText(frow.getHistory().getSource());
+			holder.mDestTextView.setText(frow.getHistory().getDestination());
+			holder.mBtnFavorite.setText(frow.getHistory().getDirection());
+		}
+		holder.mBtnFavorite.setPressed(true);
 	}
 
 	@Override

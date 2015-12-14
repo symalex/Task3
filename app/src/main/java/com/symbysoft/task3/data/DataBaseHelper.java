@@ -34,55 +34,6 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 	private HistoryDAO mHistoryDAO;
 	private FavoriteDAO mFavoriteDAO;
 
-	public static class UnknownColumnIgnoringGenericRowMapper<T, ID, T2> implements RawRowMapper<T>
-	{
-		private final TableInfo<T, ID> tableInfo;
-		private final TableInfo<T2, ID> tableInfo2;
-
-		public UnknownColumnIgnoringGenericRowMapper(TableInfo<T, ID> tableInfo, TableInfo<T2, ID> tableInfo2)
-		{
-			this.tableInfo = tableInfo;
-			this.tableInfo2 = tableInfo2;
-		}
-
-		public T mapRow(String[] columnNames, String[] resultColumns) throws SQLException
-		{
-			// create our object
-			T rowObj = tableInfo.createObject();
-			for (int i = 0; i < columnNames.length; i++)
-			{
-				// sanity check, prolly will never happen but let's be careful out there
-				if (i >= resultColumns.length)
-				{
-					continue;
-				}
-				try
-				{
-					// run through and convert each field
-					FieldType fieldType;
-					if (i < tableInfo.getFieldTypes().length)
-					{
-						fieldType = tableInfo.getFieldTypeByColumnName(columnNames[i]);
-						Object fieldObj = fieldType.convertStringToJavaField(resultColumns[i], i);
-						fieldType.assignField(rowObj, fieldObj, false, null);
-					}
-					else
-					{
-						int j = tableInfo2.getFieldTypes().length - 1 - (i - tableInfo.getFieldTypes().length);
-						fieldType = tableInfo2.getFieldTypes()[j];
-						Object fieldObj = fieldType.convertStringToJavaField(resultColumns[i], i);
-						fieldType.assignField(rowObj, fieldObj, false, null);
-					}
-				}
-				catch (IllegalArgumentException e)
-				{
-					// log this or do whatever you want
-				}
-			}
-			return rowObj;
-		}
-	}
-
 	public static class HistoryDAO extends BaseDaoImpl<HistoryRow, Long>
 	{
 		protected HistoryDAO(ConnectionSource connectionSource, Class<HistoryRow> dataClass) throws SQLException
@@ -90,19 +41,23 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 			super(connectionSource, dataClass);
 		}
 
-		public List<HistoryRow> getAll(QueryBuilder<FavoriteRow, Long> fbuilder, TableInfo<FavoriteRow, Long> tableInfo) throws SQLException
+		public List<HistoryRow> getAll(FavoriteDAO favoriteDAO) throws SQLException
 		{
 			QueryBuilder<HistoryRow, Long> builder = this.queryBuilder();
+
 			String query = builder
-					.selectRaw(String.format("`%s`.*, `%s`.`%s` as `%s`", HistoryRow.TABLE_NAME, FavoriteRow.TABLE_NAME, FavoriteRow.KEY_ID, HistoryRow.FAV_ID))
-					.leftJoin(fbuilder)
+					.selectRaw(
+							String.format("`%s`.*, `%s`.`%s` as `%s`",
+									HistoryRow.TABLE_NAME,
+									FavoriteRow.TABLE_NAME,
+									FavoriteRow.KEY_ID,
+									HistoryRow.FAV_ID
+							)
+					)
+					.leftJoin(favoriteDAO.queryBuilder())
 					.prepareStatementString();
 
-			UnknownColumnIgnoringGenericRowMapper<HistoryRow, Long, FavoriteRow> mapper = new UnknownColumnIgnoringGenericRowMapper<HistoryRow, Long, FavoriteRow>(
-					getTableInfo(),
-					tableInfo
-			);
-			RawRowMapper<HistoryRow> mapper2 = new RawRowMapper<HistoryRow>()
+			RawRowMapper<HistoryRow> mapper = new RawRowMapper<HistoryRow>()
 			{
 				public HistoryRow mapRow(String[] columnNames, String[] resultColumns)
 				{
@@ -145,9 +100,8 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 					return h;
 				}
 			};
-			GenericRawResults<HistoryRow> raw_res = this.queryRaw(query, mapper2); //getRawRowMapper()
-			List<HistoryRow> list = raw_res.getResults();
-			return this.queryForAll();
+
+			return this.queryRaw(query, mapper).getResults();
 		}
 
 		public List<HistoryRow> getAll() throws SQLException

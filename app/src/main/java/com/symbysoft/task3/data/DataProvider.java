@@ -372,16 +372,16 @@ public class DataProvider implements LocalDataBaseListener
 	}
 
 	@Override
-	public void onDBAddHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddHistoryComplete(LocalDataBaseTask task, HistoryRow row)
 	{
 		//addIfNotFound(mHistoryList, list, DatabaseHelper.HIST_SOURCE);
 	}
 
 	@Override
-	public void onDBDelHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBDelHistoryComplete(LocalDataBaseTask task, int result)
 	{
-		if (list.size() > 0)
-		{
+		//if (list.size() > 0)
+		//{
 			/*
 			long in_fav_id = 0;
 			int index = findElement(mHistoryList, list, DatabaseHelper.KEY_ID, true);
@@ -396,14 +396,14 @@ public class DataProvider implements LocalDataBaseListener
 			// delete related favorite id
 			FavoriteRow row = findById(mFavoriteList, in_fav_id);
 			mFavoriteList.remove(row);*/
-		}
+		//}
 	}
 
 	@Override
-	public void onDBAddFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddFavoriteComplete(LocalDataBaseTask task, FavoriteRow row)
 	{
-		if (list.size() > 0)
-		{
+		//if (list.size() > 0)
+		//{
 			/*
 			addIfNotFound(mFavoriteList, list, DatabaseHelper.HIST_SOURCE);
 			ContentValues cv = list.get(0);
@@ -414,14 +414,14 @@ public class DataProvider implements LocalDataBaseListener
 				cv = mHistoryList.get(i);
 				cv.put(DatabaseHelper.IN_FAVORITE_ID, in_fav_id);
 			}*/
-		}
+		//}
 	}
 
 	@Override
-	public void onDBDelFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBDelFavoriteComplete(LocalDataBaseTask task, int result)
 	{
-		if (list.size() > 0)
-		{
+		//if (list.size() > 0)
+		//{
 			/*
 			removeIfFound(mFavoriteList, list, DatabaseHelper.KEY_ID);
 
@@ -431,7 +431,7 @@ public class DataProvider implements LocalDataBaseListener
 			{
 				mHistoryList.get(i).put(DatabaseHelper.IN_FAVORITE_ID, 0);
 			}*/
-		}
+		//}
 	}
 
 	@Override

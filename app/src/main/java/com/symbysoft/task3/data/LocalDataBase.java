@@ -227,7 +227,8 @@ public class LocalDataBase implements LocalDataBaseListener
 		cv.put(ASYNC_ACTION, RuningAction.RA_READ_HISTORY.ordinal());
 		startNextAction(cv);
 	}
-
+	
+	@SuppressWarnings("unchecked")
 	private void notifyAll(RuningAction action, LocalDataBaseTask task, Object list)
 	{
 		mTask = null;
@@ -246,19 +247,27 @@ public class LocalDataBase implements LocalDataBaseListener
 						break;
 
 					case RA_ADD_HISTORY:
-						listener.onDBAddHistoryComplete(task, (List<ContentValues>)list);
+						listener.onDBAddHistoryComplete(task, (HistoryRow)list);
+						readHistory();
+						readFavorite();
 						break;
 
 					case RA_DEL_HISTORY:
-						listener.onDBDelHistoryComplete(task, (List<ContentValues>)list);
+						listener.onDBDelHistoryComplete(task, (int)list);
+						readHistory();
+						readFavorite();
 						break;
 
 					case RA_ADD_FAVORITE:
-						listener.onDBAddFavoriteComplete(task, (List<ContentValues>)list);
+						listener.onDBAddFavoriteComplete(task, (FavoriteRow)list);
+						readHistory();
+						readFavorite();
 						break;
 
 					case RA_DEL_FAVORITE:
-						listener.onDBDelFavoriteComplete(task, (List<ContentValues>)list);
+						listener.onDBDelFavoriteComplete(task, (int)list);
+						readHistory();
+						readFavorite();
 						break;
 				}
 			}
@@ -279,27 +288,27 @@ public class LocalDataBase implements LocalDataBaseListener
 	}
 
 	@Override
-	public void onDBAddHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddHistoryComplete(LocalDataBaseTask task, HistoryRow row)
 	{
-		notifyAll(RuningAction.RA_ADD_HISTORY, task, list);
+		notifyAll(RuningAction.RA_ADD_HISTORY, task, row);
 	}
 
 	@Override
-	public void onDBDelHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBDelHistoryComplete(LocalDataBaseTask task, int result)
 	{
-		notifyAll(RuningAction.RA_DEL_HISTORY, task, list);
+		notifyAll(RuningAction.RA_DEL_HISTORY, task, result);
 	}
 
 	@Override
-	public void onDBAddFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddFavoriteComplete(LocalDataBaseTask task, FavoriteRow row)
 	{
-		notifyAll(RuningAction.RA_ADD_FAVORITE, task, list);
+		notifyAll(RuningAction.RA_ADD_FAVORITE, task, row);
 	}
 
 	@Override
-	public void onDBDelFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBDelFavoriteComplete(LocalDataBaseTask task, int result)
 	{
-		notifyAll(RuningAction.RA_DEL_FAVORITE, task, list);
+		notifyAll(RuningAction.RA_DEL_FAVORITE, task, result);
 	}
 
 }

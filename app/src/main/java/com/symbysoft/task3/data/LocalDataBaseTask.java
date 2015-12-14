@@ -18,13 +18,13 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 
 		void onDBReadFavoriteComplete(LocalDataBaseTask task, List<FavoriteRow> list);
 
-		void onDBAddHistoryComplete(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBAddHistoryComplete(LocalDataBaseTask task, HistoryRow row);
 
-		void onDBDelHistoryComplete(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBDelHistoryComplete(LocalDataBaseTask task, int result);
 
-		void onDBAddFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBAddFavoriteComplete(LocalDataBaseTask task, FavoriteRow row);
 
-		void onDBDelFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBDelFavoriteComplete(LocalDataBaseTask task, int result);
 	}
 
 	public enum LocalDataBaseAction
@@ -85,9 +85,9 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 	{
 		mAction = LocalDataBaseAction.DB_ACTION_ADD_HISTORY;
 		mValues.clear();
-		mValues.put(DatabaseHelper.DIRECTION, direction);
-		mValues.put(DatabaseHelper.HIST_SOURCE, src_text);
-		mValues.put(DatabaseHelper.HIST_DEST, dest_text);
+		mValues.put(HistoryRow.DIRECTION, direction);
+		mValues.put(HistoryRow.SOURCE, src_text);
+		mValues.put(HistoryRow.DEST, dest_text);
 		execute();
 	}
 
@@ -95,7 +95,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 	{
 		mAction = LocalDataBaseAction.DB_ACTION_DEL_HISTORY;
 		mValues.clear();
-		mValues.put(DatabaseHelper.KEY_ID, id);
+		mValues.put(HistoryRow.KEY_ID, id);
 		execute();
 	}
 
@@ -103,7 +103,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 	{
 		mAction = LocalDataBaseAction.DB_ACTION_ADD_FAVORITE;
 		mValues.clear();
-		mValues.put(DatabaseHelper.HIST_ID, hist_id);
+		mValues.put(FavoriteRow.HIST_ID, hist_id);
 		execute();
 	}
 
@@ -111,7 +111,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 	{
 		mAction = LocalDataBaseAction.DB_ACTION_DEL_FAVORITE;
 		mValues.clear();
-		mValues.put(DatabaseHelper.KEY_ID, id);
+		mValues.put(FavoriteRow.KEY_ID, id);
 		execute();
 	}
 
@@ -123,14 +123,8 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 		switch (mAction)
 		{
 			case DB_ACTION_READ_FAVORITE_DATA:
-				list = mDBHelper.getFavoriteData();
 				try
 				{
-					/*
-					List<HistoryRow> hr = mDbHelper.getHistoryDAO().getAll(mDbHelper.getFavoriteDAO().queryBuilder(), mDbHelper.getFavoriteDAO().getTableInfo());
-					FavoriteRow r = new FavoriteRow();
-					r.setHistory(hr.get(2));
-					mDbHelper.getFavoriteDAO().create(r);*/
 					List<FavoriteRow> rows = mDbHelper.getFavoriteDAO().getAll();
 					for (FavoriteRow row : rows)
 					{
@@ -145,21 +139,9 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 				break;
 
 			case DB_ACTION_READ_HISTORY_DATA:
-				ret = list = mDBHelper.getHistoryData();
 				try
 				{
-					/*
-					HistoryRow r = new HistoryRow();
-					r.setDirection("en-ru");
-					r.setSource("source");
-					r.setDestination("destination");
-					r.now();
-					mDbHelper.getHistoryDAO().create(r);*/
-					List<HistoryRow> rows = mDbHelper.getHistoryDAO().getAll();
-					for (HistoryRow row : rows)
-					{
-						Log.d(TAG, row.toString());
-					}
+					ret = mDbHelper.getHistoryDAO().getAll();
 				}
 				catch (SQLException e)
 				{
@@ -168,29 +150,66 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 				break;
 
 			case DB_ACTION_ADD_HISTORY:
-				ret = list;
-				list.add(mDBHelper.addToHistory((String) mValues.get(DatabaseHelper.DIRECTION), (String) mValues.get(DatabaseHelper.HIST_SOURCE), (String) mValues.get(DatabaseHelper.HIST_DEST)));
+				try
+				{
+					HistoryRow r = new HistoryRow();
+					r.setDirection(mValues.getAsString(HistoryRow.DIRECTION));
+					r.setSource(mValues.getAsString(HistoryRow.SOURCE));
+					r.setDestination(mValues.getAsString(HistoryRow.DEST));
+					r.now();
+					mDbHelper.getHistoryDAO().create(r);
+					ret = r;
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
 				break;
 
 			case DB_ACTION_DEL_HISTORY:
-				ret = list;
-				list.add(mDBHelper.delFromHistory(mValues.getAsLong(DatabaseHelper.KEY_ID)));
+				try
+				{
+					ret = mDbHelper.getHistoryDAO().deleteById(mValues.getAsLong(HistoryRow.KEY_ID));
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
 				break;
 
 			case DB_ACTION_ADD_FAVORITE:
-				ret = list;
-				list.add(mDBHelper.addToFavorite(mValues.getAsLong(DatabaseHelper.HIST_ID)));
+				try
+				{
+					HistoryRow hr = new HistoryRow();
+					hr.setId(mValues.getAsLong(FavoriteRow.HIST_ID));
+					mDbHelper.getHistoryDAO().refresh(hr);
+					FavoriteRow fr = new FavoriteRow();
+					fr.setHistory(hr);
+					mDbHelper.getFavoriteDAO().create(fr);
+					ret = fr;
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
 				break;
 
 			case DB_ACTION_DEL_FAVORITE:
-				ret = list;
-				list.add(mDBHelper.delFromFavorite(mValues.getAsLong(DatabaseHelper.KEY_ID)));
+				try
+				{
+					ret = mDbHelper.getFavoriteDAO().deleteById(mValues.getAsLong(FavoriteRow.KEY_ID));
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
 				break;
 
 		}
 		return ret;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void onPostExecute(Object obj)
 	{
@@ -215,32 +234,28 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 			case DB_ACTION_ADD_HISTORY:
 				if (mListener != null)
 				{
-					list = (List<ContentValues>) obj;
-					mListener.onDBAddHistoryComplete(this, list);
+					mListener.onDBAddHistoryComplete(this, (HistoryRow) obj);
 				}
 				break;
 
 			case DB_ACTION_DEL_HISTORY:
 				if (mListener != null)
 				{
-					list = (List<ContentValues>) obj;
-					mListener.onDBDelHistoryComplete(this, list);
+					mListener.onDBDelHistoryComplete(this, (int) obj);
 				}
 				break;
 
 			case DB_ACTION_ADD_FAVORITE:
 				if (mListener != null)
 				{
-					list = (List<ContentValues>) obj;
-					mListener.onDBAddFavoriteComplete(this, list);
+					mListener.onDBAddFavoriteComplete(this, (FavoriteRow) obj);
 				}
 				break;
 
 			case DB_ACTION_DEL_FAVORITE:
 				if (mListener != null)
 				{
-					list = (List<ContentValues>) obj;
-					mListener.onDBDelFavoriteComplete(this, list);
+					mListener.onDBDelFavoriteComplete(this, (int) obj);
 				}
 				break;
 

@@ -27,6 +27,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import com.symbysoft.task3.data.HistoryRow;
 import com.symbysoft.task3.ui.fragments.FavoriteFragment;
 import com.symbysoft.task3.ui.fragments.HistoryFragment;
 import com.symbysoft.task3.MainApp;
@@ -211,11 +212,11 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 		mDataProvider.saveData();
 	}
 
-	public void gotoMainAndSetData(ContentValues cv)
+	public void gotoMainAndSetData(HistoryRow row)
 	{
-		mDataProvider.getSettings().getTranslateAPIData().setTranslateDirection((String) cv.get(DatabaseHelper.DIRECTION));
-		mDataProvider.getSettings().getTranslateAPIData().setSrcText((String) cv.get(DatabaseHelper.HIST_SOURCE));
-		mDataProvider.getSettings().getTranslateAPIData().setDestText((String) cv.get(DatabaseHelper.HIST_DEST));
+		mDataProvider.getSettings().getTranslateAPIData().setTranslateDirection(row.getDirection());
+		mDataProvider.getSettings().getTranslateAPIData().setSrcText(row.getSource());
+		mDataProvider.getSettings().getTranslateAPIData().setDestText(row.getDestination());
 		navigateFragment(MainActivity.FragmentPage.MAIN_FRAGMENT);
 	}
 

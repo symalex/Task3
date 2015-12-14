@@ -2,12 +2,9 @@ package com.symbysoft.task3.data;
 
 import java.util.Date;
 
-import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
-import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
-import com.symbysoft.task3.common.LocalTimestampType;
 
 @DatabaseTable(tableName = HistoryRow.TABLE_NAME)
 public class HistoryRow
@@ -104,10 +101,6 @@ public class HistoryRow
 		java.util.Date date = new java.util.Date();
 		mDt = new Date(date.getTime());
 		return this;
-	}
-
-	public HistoryRow()
-	{
 	}
 
 }

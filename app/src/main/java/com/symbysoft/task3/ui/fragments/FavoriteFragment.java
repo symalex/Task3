@@ -161,20 +161,23 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 
 	private void startAction(int action_id)
 	{
+		FavoriteRow fav_row;
 		int pos = mAdapter != null ? mAdapter.getSelectedPosition() : -1;
 		switch (action_id)
 		{
 			case R.id.favorite_menu_action_go:
 				if (pos >= 0 && pos < mDataProvider.getFavoriteList().size() && getActivity() instanceof MainActivity)
 				{
-					//((MainActivity) getActivity()).gotoMainAndSetData(mDataProvider.getFavoriteList().get(pos));
+					fav_row = mDataProvider.getFavoriteList().get(pos);
+					((MainActivity) getActivity()).gotoMainAndSetData(fav_row.getHistory());
 				}
 				break;
 
 			case R.id.favorite_menu_action_delete:
 				if (pos >= 0 && pos < mDataProvider.getFavoriteList().size())
 				{
-					//mDataProvider.getLocalDataBase().delFromFavorite(mDataProvider.getFavoriteList().get(pos).getAsLong(DatabaseHelper.KEY_ID));
+					fav_row = mDataProvider.getFavoriteList().get(pos);
+					mDataProvider.getLocalDataBase().delFromFavorite(fav_row.getId());
 				}
 				break;
 		}
@@ -229,25 +232,23 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	}
 
 	@Override
-	public void onDBAddHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddHistoryComplete(LocalDataBaseTask task, HistoryRow row)
 	{
-
 	}
 
 	@Override
-	public void onDBDelHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBDelHistoryComplete(LocalDataBaseTask task, int result)
 	{
-
 	}
 
 	@Override
-	public void onDBAddFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddFavoriteComplete(LocalDataBaseTask task, FavoriteRow row)
 	{
 		updateList();
 	}
 
 	@Override
-	public void onDBDelFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBDelFavoriteComplete(LocalDataBaseTask task, int result)
 	{
 		updateList();
 	}

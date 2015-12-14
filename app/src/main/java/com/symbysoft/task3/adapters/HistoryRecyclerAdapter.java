@@ -2,7 +2,6 @@ package com.symbysoft.task3.adapters;
 
 import java.util.ArrayList;
 
-import android.content.ContentValues;
 import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -19,8 +18,6 @@ import com.symbysoft.task3.R;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-import com.symbysoft.task3.adapters.HistoryRecyclerAdapter.ViewHolder;
-import com.symbysoft.task3.data.DatabaseHelper;
 import com.symbysoft.task3.data.HistoryRow;
 
 public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecyclerAdapter.ViewHolder>

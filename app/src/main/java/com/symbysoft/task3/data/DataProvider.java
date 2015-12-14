@@ -1,5 +1,6 @@
 package com.symbysoft.task3.data;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -190,7 +191,8 @@ public class DataProvider implements LocalDataBaseListener
 
 	public int getProgress()
 	{
-		int v = mProgress + mLocalDataBase.getDBHelper().getProgress();
+		mProgress++;
+		int v = mProgress; // + mLocalDataBase.getDbHelper().getProgress();
 		if (v >= mProgressMax)
 		{
 			mDataLoaded = true;
@@ -227,7 +229,14 @@ public class DataProvider implements LocalDataBaseListener
 	public void openDatabase()
 	{
 		mLocalDataBase.open();
-		mProgressMax = 5 + mLocalDataBase.getDBHelper().getHistoryRecordCount() + mLocalDataBase.getDBHelper().getFavoriteRecordCount();
+		try
+		{
+			mProgressMax = 5 + mLocalDataBase.getDbHelper().getHistoryDAO().getHistoryRecordCount() + mLocalDataBase.getDbHelper().getFavoriteDAO().getFavoriteRecordCount();
+		}
+		catch (SQLException e)
+		{
+
+		}
 		mProgress += 1;
 	}
 

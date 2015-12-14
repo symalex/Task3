@@ -1,9 +1,7 @@
 package com.symbysoft.task3.ui.fragments;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import android.content.ContentValues;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,9 +14,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -26,16 +21,12 @@ import butterknife.ButterKnife;
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
 import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter;
-import com.symbysoft.task3.adapters.HistoryRecyclerAdapter;
 import com.symbysoft.task3.data.DataProvider;
-import com.symbysoft.task3.data.DatabaseHelper;
 import com.symbysoft.task3.data.FavoriteRow;
 import com.symbysoft.task3.data.HistoryRow;
 import com.symbysoft.task3.data.LocalDataBaseTask;
 import com.symbysoft.task3.data.LocalDataBaseTask.LocalDataBaseListener;
 import com.symbysoft.task3.ui.activities.MainActivity;
-
-import android.widget.AdapterView.OnItemClickListener;
 
 import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter.FavoriteRecyclerItemClickListener;
 

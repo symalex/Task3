@@ -2,7 +2,6 @@ package com.symbysoft.task3.adapters;
 
 import java.util.ArrayList;
 
-import android.content.ContentValues;
 import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -15,12 +14,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.symbysoft.task3.R;
-import com.symbysoft.task3.data.DatabaseHelper;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter.ViewHolder;
 import com.symbysoft.task3.data.FavoriteRow;
 
 public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecyclerAdapter.ViewHolder>

@@ -32,16 +32,15 @@ public class LocalDataBase implements LocalDataBaseListener
 	}
 
 	private final Context mCtx;
-	private DatabaseHelper mDBHelper;
 	private DataBaseHelper mDbHelper;
 	private final LinkedHashSet<LocalDataBaseListener> mListeners;
 
 	private LocalDataBaseTask mTask;
 	private final LinkedList<ContentValues> mActions;
 
-	public DatabaseHelper getDBHelper()
+	public DataBaseHelper getDbHelper()
 	{
-		return mDBHelper;
+		return mDbHelper;
 	}
 
 	public boolean isListenerSet(LocalDataBaseListener listener)
@@ -73,18 +72,11 @@ public class LocalDataBase implements LocalDataBaseListener
 
 	public void open()
 	{
-		mDBHelper = new DatabaseHelper(mCtx, DATABASE_NAME, null, DATABASE_VERSION);
 		mDbHelper = new DataBaseHelper(mCtx);
 	}
 
 	public void close()
 	{
-		if (mDBHelper != null)
-		{
-			mDBHelper.close();
-			mDBHelper = null;
-		}
-
 		if (mDbHelper != null)
 		{
 			mDbHelper.close();
@@ -131,44 +123,44 @@ public class LocalDataBase implements LocalDataBaseListener
 			{
 				case RA_READ_FAVORITE:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
+					mTask = new LocalDataBaseTask(mDbHelper);
 					mTask.setListener(this);
 					mTask.getFavoriteData();
 					break;
 
 				case RA_READ_HISTORY:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
+					mTask = new LocalDataBaseTask(mDbHelper);
 					mTask.setListener(this);
 					mTask.getHistoryData();
 					break;
 
 				case RA_ADD_HISTORY:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
+					mTask = new LocalDataBaseTask(mDbHelper);
 					mTask.setListener(this);
-					mTask.addToHistory((String) cv.get(DatabaseHelper.DIRECTION), (String) cv.get(DatabaseHelper.HIST_SOURCE), (String) cv.get(DatabaseHelper.HIST_DEST));
+					mTask.addToHistory((String) cv.get(HistoryRow.DIRECTION), (String) cv.get(HistoryRow.SOURCE), (String) cv.get(HistoryRow.DEST));
 					break;
 
 				case RA_DEL_HISTORY:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
+					mTask = new LocalDataBaseTask(mDbHelper);
 					mTask.setListener(this);
-					mTask.delFromHistory(cv.getAsLong(DatabaseHelper.KEY_ID));
+					mTask.delFromHistory(cv.getAsLong(HistoryRow.KEY_ID));
 					break;
 
 				case RA_ADD_FAVORITE:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
+					mTask = new LocalDataBaseTask(mDbHelper);
 					mTask.setListener(this);
-					mTask.addToFavorite(cv.getAsLong(DatabaseHelper.HIST_ID));
+					mTask.addToFavorite(cv.getAsLong(FavoriteRow.HIST_ID));
 					break;
 
 				case RA_DEL_FAVORITE:
 					cancelTask(mTask);
-					mTask = new LocalDataBaseTask(mDBHelper, mDbHelper);
+					mTask = new LocalDataBaseTask(mDbHelper);
 					mTask.setListener(this);
-					mTask.delFromFavorite(cv.getAsLong(DatabaseHelper.KEY_ID));
+					mTask.delFromFavorite(cv.getAsLong(FavoriteRow.KEY_ID));
 					break;
 			}
 		}
@@ -178,7 +170,7 @@ public class LocalDataBase implements LocalDataBaseListener
 	{
 		ContentValues cv = new ContentValues();
 		cv.put(ASYNC_ACTION, RuningAction.RA_ADD_FAVORITE.ordinal());
-		cv.put(DatabaseHelper.HIST_ID, hist_id);
+		cv.put(FavoriteRow.HIST_ID, hist_id);
 		startNextAction(cv);
 	}
 
@@ -186,7 +178,7 @@ public class LocalDataBase implements LocalDataBaseListener
 	{
 		ContentValues cv = new ContentValues();
 		cv.put(ASYNC_ACTION, RuningAction.RA_DEL_FAVORITE.ordinal());
-		cv.put(DatabaseHelper.KEY_ID, id);
+		cv.put(FavoriteRow.KEY_ID, id);
 		startNextAction(cv);
 	}
 
@@ -194,9 +186,9 @@ public class LocalDataBase implements LocalDataBaseListener
 	{
 		ContentValues cv = new ContentValues();
 		cv.put(ASYNC_ACTION, RuningAction.RA_ADD_HISTORY.ordinal());
-		cv.put(DatabaseHelper.DIRECTION, direction);
-		cv.put(DatabaseHelper.HIST_SOURCE, src_text);
-		cv.put(DatabaseHelper.HIST_DEST, dest_text);
+		cv.put(HistoryRow.DIRECTION, direction);
+		cv.put(HistoryRow.SOURCE, src_text);
+		cv.put(HistoryRow.DEST, dest_text);
 		startNextAction(cv);
 	}
 
@@ -204,7 +196,7 @@ public class LocalDataBase implements LocalDataBaseListener
 	{
 		ContentValues cv = new ContentValues();
 		cv.put(ASYNC_ACTION, RuningAction.RA_DEL_HISTORY.ordinal());
-		cv.put(DatabaseHelper.KEY_ID, id);
+		cv.put(HistoryRow.KEY_ID, id);
 		startNextAction(cv);
 	}
 
@@ -227,7 +219,7 @@ public class LocalDataBase implements LocalDataBaseListener
 		cv.put(ASYNC_ACTION, RuningAction.RA_READ_HISTORY.ordinal());
 		startNextAction(cv);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private void notifyAll(RuningAction action, LocalDataBaseTask task, Object list)
 	{

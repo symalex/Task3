@@ -104,6 +104,21 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 			return this.queryRaw(query, mapper).getResults();
 		}
 
+		public int getHistoryRecordCount()
+		{
+			int ret = 0;
+			try
+			{
+				String str = this.queryRaw("SELECT COUNT(*) FROM " + HistoryRow.TABLE_NAME).getFirstResult()[0];
+				ret = Integer.parseInt(str);
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+			return ret;
+		}
+
 		public List<HistoryRow> getAll() throws SQLException
 		{
 			return this.queryForAll();
@@ -115,6 +130,21 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 		protected FavoriteDAO(ConnectionSource connectionSource, Class<FavoriteRow> dataClass) throws SQLException
 		{
 			super(connectionSource, dataClass);
+		}
+
+		public int getFavoriteRecordCount()
+		{
+			int ret = 0;
+			try
+			{
+				String str = this.queryRaw("SELECT COUNT(*) FROM " + FavoriteRow.TABLE_NAME).getFirstResult()[0];
+				ret = Integer.parseInt(str);
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+			return ret;
 		}
 
 		public List<FavoriteRow> getAll() throws SQLException

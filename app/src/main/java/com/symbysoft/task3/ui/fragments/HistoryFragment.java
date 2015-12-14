@@ -1,10 +1,9 @@
 package com.symbysoft.task3.ui.fragments;
 
-import java.util.ArrayList;
 import java.util.List;
+import android.os.Handler;
+import java.util.logging.LogRecord;
 
-import android.content.ContentValues;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,9 +16,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -28,14 +24,11 @@ import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
 import com.symbysoft.task3.adapters.HistoryRecyclerAdapter;
 import com.symbysoft.task3.data.DataProvider;
-import com.symbysoft.task3.data.DatabaseHelper;
 import com.symbysoft.task3.data.FavoriteRow;
 import com.symbysoft.task3.data.HistoryRow;
 import com.symbysoft.task3.data.LocalDataBaseTask;
 import com.symbysoft.task3.data.LocalDataBaseTask.LocalDataBaseListener;
 import com.symbysoft.task3.ui.activities.MainActivity;
-
-import android.widget.AdapterView.OnItemClickListener;
 
 import com.symbysoft.task3.adapters.HistoryRecyclerAdapter.HistoryRecyclerItemClickListener;
 
@@ -59,6 +52,16 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	private MenuItem mMenuItemDelete;
 
 	private DataProvider mDataProvider;
+
+	private final Handler mHandler = new android.os.Handler();
+	private final Runnable mRunnableUpdateList = new Runnable()
+	{
+		@Override
+		public void run()
+		{
+			updateList();
+		}
+	};
 
 	private final ItemTouchHelper.SimpleCallback mItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT)
 	{
@@ -288,6 +291,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	public void onDBDelHistoryComplete(LocalDataBaseTask task, int result)
 	{
 		updateList();
+		mHandler.postDelayed(mRunnableUpdateList, 1000);
 	}
 
 	@Override

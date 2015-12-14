@@ -41,7 +41,6 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 	}
 
 	private LocalDataBaseAction mAction = LocalDataBaseAction.DB_ACTION_NONE;
-	private final DatabaseHelper mDBHelper;
 	private final DataBaseHelper mDbHelper;
 	private final ContentValues mValues;
 
@@ -62,9 +61,8 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 		mListener = listener;
 	}
 
-	LocalDataBaseTask(DatabaseHelper db_helper, DataBaseHelper helper)
+	LocalDataBaseTask(DataBaseHelper helper)
 	{
-		mDBHelper = db_helper;
 		mDbHelper = helper;
 		mValues = new ContentValues();
 	}

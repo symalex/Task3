@@ -198,11 +198,11 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 	}
 
 	@Override
-	public void onLoadDataComplette()
+	public void onLoadDataComplete()
 	{
 		if (mFragment != null && mFragment instanceof DataProviderListener)
 		{
-			((DataProviderListener) mFragment).onLoadDataComplette();
+			((DataProviderListener) mFragment).onLoadDataComplete();
 		}
 	}
 

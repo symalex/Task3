@@ -238,7 +238,7 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 	}
 
 	@Override
-	public void onLoadDataComplette()
+	public void onLoadDataComplete()
 	{
 		updateInfoTexts();
 	}

@@ -216,36 +216,36 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	}
 
 	@Override
-	public void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 	}
 
 	@Override
-	public void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-		updateList();
-	}
-
-	@Override
-	public void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-
-	}
-
-	@Override
-	public void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
-	{
-
-	}
-
-	@Override
-	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		updateList();
 	}
 
 	@Override
-	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	{
+
+	}
+
+	@Override
+	public void onDBDelHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
+	{
+
+	}
+
+	@Override
+	public void onDBAddFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
+	{
+		updateList();
+	}
+
+	@Override
+	public void onDBDelFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		updateList();
 	}

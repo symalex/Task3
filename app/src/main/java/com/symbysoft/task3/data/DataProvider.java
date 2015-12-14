@@ -32,7 +32,7 @@ public class DataProvider implements LocalDataBaseListener
 
 	public interface DataProviderListener
 	{
-		void onLoadDataComplette();
+		void onLoadDataComplete();
 	}
 
 	private ArrayList<ContentValues> mHistoryList;
@@ -214,7 +214,7 @@ public class DataProvider implements LocalDataBaseListener
 		{
 			if (listener != null)
 			{
-				listener.onLoadDataComplette();
+				listener.onLoadDataComplete();
 			}
 		}
 	}
@@ -351,20 +351,20 @@ public class DataProvider implements LocalDataBaseListener
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		mProgress += 1;
 		mFavoriteList = (ArrayList<ContentValues>) ((ArrayList<ContentValues>) list).clone();
 	}
 
 	@Override
-	public void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		addIfNotFound(mHistoryList, list, DatabaseHelper.HIST_SOURCE);
 	}
 
 	@Override
-	public void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBDelHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		if (list.size() > 0)
 		{
@@ -388,7 +388,7 @@ public class DataProvider implements LocalDataBaseListener
 	}
 
 	@Override
-	public void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBAddFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		if (list.size() > 0)
 		{
@@ -405,7 +405,7 @@ public class DataProvider implements LocalDataBaseListener
 	}
 
 	@Override
-	public void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBDelFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		if (list.size() > 0)
 		{
@@ -422,7 +422,7 @@ public class DataProvider implements LocalDataBaseListener
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list)
+	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<ContentValues> list)
 	{
 		mProgress = mProgressMax; //+=1+mLocalDataBase.getDBHelper().getProgress()
 		mHistoryList = (ArrayList<ContentValues>) ((ArrayList<ContentValues>) list).clone();

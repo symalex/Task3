@@ -114,7 +114,7 @@ public class SplashActivity extends AppCompatActivity
 				}
 				else
 				{
-					//onLoadDataComplette();
+					//onLoadDataComplete();
 					finish();
 				}
 			}

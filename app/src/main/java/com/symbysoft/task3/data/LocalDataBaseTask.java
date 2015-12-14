@@ -12,17 +12,17 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 
 	public interface LocalDataBaseListener
 	{
-		void onDBReadHistoryComplette(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBReadHistoryComplete(LocalDataBaseTask task, List<ContentValues> list);
 
-		void onDBReadFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBReadFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list);
 
-		void onDBAddHistoryComplette(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBAddHistoryComplete(LocalDataBaseTask task, List<ContentValues> list);
 
-		void onDBDelHistoryComplette(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBDelHistoryComplete(LocalDataBaseTask task, List<ContentValues> list);
 
-		void onDBAddFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBAddFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list);
 
-		void onDBDelFavoriteComplette(LocalDataBaseTask task, List<ContentValues> list);
+		void onDBDelFavoriteComplete(LocalDataBaseTask task, List<ContentValues> list);
 	}
 
 	public enum LocalDataBaseAction
@@ -155,42 +155,42 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, List<ContentValues>
 			case DB_ACTION_READ_FAVORITE_DATA:
 				if (mListener != null)
 				{
-					mListener.onDBReadFavoriteComplette(this, list);
+					mListener.onDBReadFavoriteComplete(this, list);
 				}
 				break;
 
 			case DB_ACTION_READ_HISTORY_DATA:
 				if (mListener != null)
 				{
-					mListener.onDBReadHistoryComplette(this, list);
+					mListener.onDBReadHistoryComplete(this, list);
 				}
 				break;
 
 			case DB_ACTION_ADD_HISTORY:
 				if (mListener != null)
 				{
-					mListener.onDBAddHistoryComplette(this, list);
+					mListener.onDBAddHistoryComplete(this, list);
 				}
 				break;
 
 			case DB_ACTION_DEL_HISTORY:
 				if (mListener != null)
 				{
-					mListener.onDBDelHistoryComplette(this, list);
+					mListener.onDBDelHistoryComplete(this, list);
 				}
 				break;
 
 			case DB_ACTION_ADD_FAVORITE:
 				if (mListener != null)
 				{
-					mListener.onDBAddFavoriteComplette(this, list);
+					mListener.onDBAddFavoriteComplete(this, list);
 				}
 				break;
 
 			case DB_ACTION_DEL_FAVORITE:
 				if (mListener != null)
 				{
-					mListener.onDBDelFavoriteComplette(this, list);
+					mListener.onDBDelFavoriteComplete(this, list);
 				}
 				break;
 

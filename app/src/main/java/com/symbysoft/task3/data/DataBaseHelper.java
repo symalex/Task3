@@ -2,8 +2,6 @@ package com.symbysoft.task3.data;
 
 import java.sql.Date;
 import java.sql.SQLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 import android.content.Context;
@@ -12,13 +10,12 @@ import android.util.Log;
 
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.BaseDaoImpl;
-import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.GenericRawResults;
 import com.j256.ormlite.dao.RawRowMapper;
-import com.j256.ormlite.field.FieldType;
+import com.j256.ormlite.stmt.DeleteBuilder;
+import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
-import com.j256.ormlite.table.TableInfo;
 import com.j256.ormlite.table.TableUtils;
 
 public class DataBaseHelper extends OrmLiteSqliteOpenHelper
@@ -145,6 +142,26 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 				e.printStackTrace();
 			}
 			return ret;
+		}
+
+		public int delete_by_hist_id(long hist_id) throws SQLException
+		{
+			DeleteBuilder<FavoriteRow, Long> builder = this.deleteBuilder();
+			builder.where().eq(FavoriteRow.HIST_ID, hist_id).prepare();
+			return builder.delete();
+		}
+
+		public int insert_by_hist_id(long hist_id) throws SQLException
+		{
+			QueryBuilder<FavoriteRow, Long> builder = this.queryBuilder();
+			PreparedQuery query = builder.where().eq(FavoriteRow.HIST_ID, hist_id).prepare();
+			String[] r_arr = queryRaw(query.getStatement()).getFirstResult();
+			if (r_arr == null)
+			{
+				// INSERT INTO favorites (hist_id) VALUES (value1);
+				queryRaw(String.format("INSERT INTO `%s` (`%s`) VALUES (%d)", FavoriteRow.TABLE_NAME, FavoriteRow.HIST_ID, hist_id));
+			}
+			return 0;
 		}
 
 		public List<FavoriteRow> getAll() throws SQLException

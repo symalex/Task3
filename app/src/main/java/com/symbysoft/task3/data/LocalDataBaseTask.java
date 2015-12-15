@@ -139,7 +139,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 			case DB_ACTION_READ_HISTORY_DATA:
 				try
 				{
-					ret = mDbHelper.getHistoryDAO().getAll();
+					ret = mDbHelper.getHistoryDAO().getAll(mDbHelper.getFavoriteDAO());
 				}
 				catch (SQLException e)
 				{
@@ -167,7 +167,12 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 			case DB_ACTION_DEL_HISTORY:
 				try
 				{
-					ret = mDbHelper.getHistoryDAO().deleteById(mValues.getAsLong(HistoryRow.KEY_ID));
+					HistoryRow r = new HistoryRow();
+					r.setId(mValues.getAsLong(HistoryRow.KEY_ID));
+					mDbHelper.getHistoryDAO().refresh(r);
+					mDbHelper.getHistoryDAO().delete(r);
+					ret = mDbHelper.getHistoryDAO().deleteById(r.getId());
+					ret = mDbHelper.getFavoriteDAO().delete_by_hist_id(r.getId());
 				}
 				catch (SQLException e)
 				{
@@ -179,11 +184,11 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 				try
 				{
 					HistoryRow hr = new HistoryRow();
-					hr.setId(mValues.getAsLong(FavoriteRow.HIST_ID));
-					mDbHelper.getHistoryDAO().refresh(hr);
 					FavoriteRow fr = new FavoriteRow();
 					fr.setHistory(hr);
-					mDbHelper.getFavoriteDAO().create(fr);
+					hr.setId(mValues.getAsLong(FavoriteRow.HIST_ID));
+					mDbHelper.getFavoriteDAO().insert_by_hist_id(mValues.getAsLong(FavoriteRow.HIST_ID));
+					mDbHelper.getFavoriteDAO().refresh(fr);
 					ret = fr;
 				}
 				catch (SQLException e)
@@ -244,7 +249,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 				break;
 
 			case DB_ACTION_ADD_FAVORITE:
-				if (mListener != null)
+				if (mListener != null && obj != null)
 				{
 					mListener.onDBAddFavoriteComplete(this, (FavoriteRow) obj);
 				}

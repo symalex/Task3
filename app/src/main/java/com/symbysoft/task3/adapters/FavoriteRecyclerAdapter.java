@@ -19,6 +19,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 import com.symbysoft.task3.data.FavoriteRow;
+import com.symbysoft.task3.data.HistoryRow;
 
 public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecyclerAdapter.ViewHolder>
 {
@@ -29,6 +30,16 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 	public int getSelectedPosition()
 	{
 		return mSelectedPosition;
+	}
+
+	public ArrayList<FavoriteRow> getList()
+	{
+		return mList;
+	}
+
+	public void setList(ArrayList<FavoriteRow> list)
+	{
+		mList = list;
 	}
 
 	public void setSelectedPosition(int selectedPosition)

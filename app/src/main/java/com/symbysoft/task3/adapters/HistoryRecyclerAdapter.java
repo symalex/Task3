@@ -31,6 +31,16 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 		return mSelectedPosition;
 	}
 
+	public ArrayList<HistoryRow> getList()
+	{
+		return mList;
+	}
+
+	public void setList(ArrayList<HistoryRow> list)
+	{
+		mList = list;
+	}
+
 	public void setSelectedPosition(int selectedPosition)
 	{
 		mSelectedPosition = selectedPosition;
@@ -117,7 +127,7 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 		holder.mSrcTextView.setText(hist_row.getSource());
 		holder.mDestTextView.setText(hist_row.getDestination());
 		holder.mBtnFavorite.setText(hist_row.getDirection());
-		//holder.mBtnFavorite.setPressed(cv.getAsLong(DatabaseHelper.IN_FAVORITE_ID) != 0);
+		holder.mBtnFavorite.setPressed(hist_row.getFavId() != 0);
 	}
 
 	@Override

@@ -1,7 +1,9 @@
 package com.symbysoft.task3.ui.fragments;
 
 import java.util.List;
+
 import android.os.Handler;
+
 import java.util.logging.LogRecord;
 
 import android.os.Bundle;
@@ -23,6 +25,7 @@ import butterknife.ButterKnife;
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
 import com.symbysoft.task3.adapters.HistoryRecyclerAdapter;
+import com.symbysoft.task3.common.helper;
 import com.symbysoft.task3.data.DataProvider;
 import com.symbysoft.task3.data.FavoriteRow;
 import com.symbysoft.task3.data.HistoryRow;
@@ -53,15 +56,13 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 
 	private DataProvider mDataProvider;
 
-	private final Handler mHandler = new android.os.Handler();
-	private final Runnable mRunnableUpdateList = new Runnable()
+	private enum ListAction
 	{
-		@Override
-		public void run()
-		{
-			updateList();
-		}
-	};
+		ITEM_DEL,
+		ITEM_ADD,
+		ITEM_CHANGED,
+		REFRESH
+	}
 
 	private final ItemTouchHelper.SimpleCallback mItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT)
 	{
@@ -152,10 +153,14 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 			case R.id.item_history_btn_favorite:
 				if (mDataProvider != null && position >= 0 && position < mDataProvider.getHistoryList().size())
 				{
+					if (mDataProvider != null)
+					{
+						mDataProvider.setHistorySelectedItemPosition(position);
+					}
 					startAction(R.id.history_menu_action_bookmark);
-					/*
-					ContentValues cv = mDataProvider.getHistoryList().get(position);
-					long in_fav_id = cv.getAsLong(DatabaseHelper.IN_FAVORITE_ID);
+
+					HistoryRow hist_row = mDataProvider.getHistoryList().get(position);
+					long in_fav_id = hist_row.getFavId();
 					if (in_fav_id == 0)
 					{
 						startAction(R.id.history_menu_action_bookmark);
@@ -164,7 +169,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 					{
 						// remove from favorites
 						mDataProvider.getLocalDataBase().delFromFavorite(in_fav_id);
-					}*/
+					}
 				}
 				break;
 		}
@@ -206,6 +211,13 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				{
 					hist_row = mDataProvider.getHistoryList().get(pos);
 					mDataProvider.getLocalDataBase().addToFavorite(hist_row.getId());
+					if (mAdapter != null)
+					{
+						synchronized (mAdapter)
+						{
+							mAdapter.notifyItemChanged(pos);
+						}
+					}
 				}
 				break;
 
@@ -214,6 +226,13 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				{
 					hist_row = mDataProvider.getHistoryList().get(pos);
 					mDataProvider.getLocalDataBase().delFromHistory(hist_row.getId());
+					if (mAdapter != null)
+					{
+						synchronized (mAdapter)
+						{
+							mAdapter.notifyItemRemoved(pos);
+						}
+					}
 				}
 				break;
 		}
@@ -261,49 +280,75 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		super.onStop();
 	}
 
-	private void updateList()
+	private void updateList(ListAction action)
 	{
 		if (mAdapter != null)
 		{
-			mAdapter.notifyDataSetChanged();
+			synchronized (mAdapter)
+			{
+				mAdapter.setList(mDataProvider.getHistoryList());
+
+				int pos = mAdapter.getSelectedPosition();
+				if (pos != -1)
+				{
+					switch (action)
+					{
+						case REFRESH:
+							mAdapter.notifyDataSetChanged();
+							break;
+
+						case ITEM_DEL:
+							mAdapter.notifyItemRemoved(pos);
+							break;
+
+						case ITEM_ADD:
+							mAdapter.notifyItemInserted(pos);
+							break;
+
+						case ITEM_CHANGED:
+							mAdapter.notifyItemChanged(pos);
+							break;
+					}
+				}
+			}
 		}
 	}
 
 	@Override
 	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<HistoryRow> list)
 	{
-		updateList();
+		updateList(ListAction.REFRESH);
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<FavoriteRow> list)
 	{
-		updateList();
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBAddHistoryComplete(LocalDataBaseTask task, HistoryRow row)
 	{
-		updateList();
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBDelHistoryComplete(LocalDataBaseTask task, int result)
 	{
-		updateList();
-		mHandler.postDelayed(mRunnableUpdateList, 1000);
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBAddFavoriteComplete(LocalDataBaseTask task, FavoriteRow row)
 	{
-		updateList();
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBDelFavoriteComplete(LocalDataBaseTask task, int result)
 	{
-		updateList();
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 }

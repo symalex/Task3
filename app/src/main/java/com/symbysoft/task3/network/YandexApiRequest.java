@@ -7,6 +7,10 @@ import java.util.Set;
 import retrofit.Call;
 import retrofit.http.GET;
 import retrofit.http.Query;
+import com.symbysoft.task3.network.YandexTranslateAPIData.YandexApiResult;
+import com.symbysoft.task3.network.YandexTranslateAPIData.LangsData;
+import com.symbysoft.task3.network.YandexTranslateAPIData.LangDetectData;
+import com.symbysoft.task3.network.YandexTranslateAPIData.TranslateData;
 
 public interface YandexApiRequest
 {
@@ -33,33 +37,5 @@ public interface YandexApiRequest
 			@Query("format") String format,
 			@Query("options") int options
 	);
-
-	class YandexApiResult
-	{
-		int code;
-	}
-
-	class LangsData extends YandexApiResult
-	{
-		Set<String> dirs;
-		HashMap<String, String> langs;
-	}
-
-	class LangDetectData extends YandexApiResult
-	{
-		String lang;
-	}
-
-	class DetectedInfo
-	{
-		String lang;
-	}
-
-	class TranslateData extends YandexApiResult
-	{
-		DetectedInfo detected;
-		String lang;
-		ArrayList<String> text;
-	}
 
 }

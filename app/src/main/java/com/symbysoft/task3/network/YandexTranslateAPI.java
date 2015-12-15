@@ -12,14 +12,17 @@ import android.util.Log;
 import com.squareup.okhttp.OkHttpClient;
 import com.symbysoft.task3.R;
 
+import com.symbysoft.task3.network.YandexTranslateAPIData.YandexApiResult;
+import com.symbysoft.task3.network.YandexTranslateAPIData.LangsData;
+import com.symbysoft.task3.network.YandexTranslateAPIData.LangDetectData;
+import com.symbysoft.task3.network.YandexTranslateAPIData.TranslateData;
+
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.GsonConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
 
-import com.symbysoft.task3.network.YandexApiRequest.YandexApiResult;
-import com.symbysoft.task3.network.YandexApiRequest.*;
 
 public class YandexTranslateAPI
 {

@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
+import com.symbysoft.task3.common.helper;
 import com.symbysoft.task3.data.DataProvider;
 import com.symbysoft.task3.network.InternetReceiver;
 import com.symbysoft.task3.network.InternetReceiver.InternetReceiverListener;
@@ -427,13 +428,13 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 	@Override
 	public void onSupportedLangsUpdate(YandexTranslateAPI api, Set<String> dirs, Map<String, String> langs)
 	{
-
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDetectedLangUpdate(YandexTranslateAPI api, String detected_lang)
 	{
-
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
@@ -444,12 +445,13 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 			mEditTextBottom.setText(text);
 			updateInfoTexts();
 		}
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onHttpRequestResultError(YandexTranslateAPI api, int http_status_code, String message)
 	{
-
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 }

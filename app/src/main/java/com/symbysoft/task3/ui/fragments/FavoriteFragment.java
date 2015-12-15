@@ -21,6 +21,7 @@ import butterknife.ButterKnife;
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
 import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter;
+import com.symbysoft.task3.common.helper;
 import com.symbysoft.task3.data.DataProvider;
 import com.symbysoft.task3.data.FavoriteRow;
 import com.symbysoft.task3.data.HistoryRow;
@@ -62,6 +63,8 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 			switch (swipeDir)
 			{
 				case ItemTouchHelper.LEFT:
+					Log.d(TAG, "Delete item");
+					startAction(R.id.favorite_menu_action_delete);
 					break;
 
 				case ItemTouchHelper.RIGHT:
@@ -112,7 +115,11 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	{
 		if (mAdapter != null)
 		{
-			mAdapter.notifyDataSetChanged();
+			synchronized(mAdapter)
+			{
+				mAdapter.setList(mDataProvider.getFavoriteList());
+				mAdapter.notifyDataSetChanged();
+			}
 		}
 	}
 
@@ -169,6 +176,13 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 				{
 					fav_row = mDataProvider.getFavoriteList().get(pos);
 					mDataProvider.getLocalDataBase().delFromFavorite(fav_row.getId());
+					if (mAdapter != null)
+					{
+						synchronized(mAdapter)
+						{
+							mAdapter.notifyItemRemoved(pos);
+						}
+					}
 				}
 				break;
 		}
@@ -214,34 +228,38 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	@Override
 	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<HistoryRow> list)
 	{
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<FavoriteRow> list)
 	{
 		updateList();
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBAddHistoryComplete(LocalDataBaseTask task, HistoryRow row)
 	{
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBDelHistoryComplete(LocalDataBaseTask task, int result)
 	{
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBAddFavoriteComplete(LocalDataBaseTask task, FavoriteRow row)
 	{
-		updateList();
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBDelFavoriteComplete(LocalDataBaseTask task, int result)
 	{
-		updateList();
+		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 }

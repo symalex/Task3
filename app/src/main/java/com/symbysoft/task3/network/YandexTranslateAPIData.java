@@ -1,5 +1,6 @@
 package com.symbysoft.task3.network;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -151,6 +152,36 @@ public class YandexTranslateAPIData
 	{
 		mApiDataInitialized = apiDataInitialized;
 	}
+
+	// interface methods ----------------------
+	public static class YandexApiResult
+	{
+		int code;
+	}
+
+	public static class LangsData extends YandexApiResult
+	{
+		Set<String> dirs;
+		HashMap<String, String> langs;
+	}
+
+	public static class LangDetectData extends YandexApiResult
+	{
+		String lang;
+	}
+
+	public static class DetectedInfo
+	{
+		String lang;
+	}
+
+	public static class TranslateData extends YandexApiResult
+	{
+		DetectedInfo detected;
+		String lang;
+		ArrayList<String> text;
+	}
+	// interface methods ----------------------
 
 	public YandexTranslateAPIData()
 	{

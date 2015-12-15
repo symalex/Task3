@@ -239,19 +239,17 @@ public class LocalDataBase implements LocalDataBaseListener
 						break;
 
 					case RA_ADD_HISTORY:
-						listener.onDBAddHistoryComplete(task, (HistoryRow)list);
+						listener.onDBAddHistoryComplete(task, (HistoryRow) list);
 						readHistory();
-						readFavorite();
 						break;
 
 					case RA_DEL_HISTORY:
-						listener.onDBDelHistoryComplete(task, (int)list);
+						listener.onDBDelHistoryComplete(task, (int) list);
 						readHistory();
-						readFavorite();
 						break;
 
 					case RA_ADD_FAVORITE:
-						listener.onDBAddFavoriteComplete(task, (FavoriteRow)list);
+						listener.onDBAddFavoriteComplete(task, (FavoriteRow) list);
 						readHistory();
 						readFavorite();
 						break;

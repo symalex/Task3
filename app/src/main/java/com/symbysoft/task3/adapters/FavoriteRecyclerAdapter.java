@@ -77,6 +77,9 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 			super(view);
 			mLayout = view;
 			ButterKnife.bind(this, view);
+			mBtnFavorite.setClickable(false);
+			mBtnFavorite.setFocusableInTouchMode(false);
+			mBtnFavorite.setFocusable(false);
 			mRelativeLayout.setOnClickListener(this);
 		}
 
@@ -114,15 +117,7 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position)
 	{
-		if (mSelectedPosition == position)
-		{
-			holder.mRelativeLayout.setBackgroundColor(Color.parseColor("#00FF00"));
-		}
-		else
-		{
-			holder.mRelativeLayout.setBackgroundColor(Color.parseColor("#FEFFFF"));
-		}
-		holder.mRelativeLayout.setSelected(mSelectedPosition == position);
+		holder.mLayout.setSelected(mSelectedPosition == position);
 		FavoriteRow frow = mList.get(position);
 		if (frow.getHistory() != null)
 		{

@@ -82,10 +82,6 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 			switch (swipeDir)
 			{
 				case ItemTouchHelper.LEFT:
-					Log.d(TAG, "add to faworite");
-					startAction(R.id.history_menu_action_bookmark);
-					break;
-
 				case ItemTouchHelper.RIGHT:
 					Log.d(TAG, "Delete item");
 					startAction(R.id.history_menu_action_delete);
@@ -133,13 +129,13 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	@Override
 	public void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id)
 	{
+		if (mDataProvider != null)
+		{
+			mDataProvider.setHistorySelectedItemPosition(position);
+		}
 		switch (view.getId())
 		{
 			case R.id.item_history_card_view_layout:
-				if (mDataProvider != null)
-				{
-					mDataProvider.setHistorySelectedItemPosition(position);
-				}
 				if (mMenuItemFavorite != null)
 				{
 					mMenuItemFavorite.setVisible(true);
@@ -153,10 +149,6 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 			case R.id.item_history_btn_favorite:
 				if (mDataProvider != null && position >= 0 && position < mDataProvider.getHistoryList().size())
 				{
-					if (mDataProvider != null)
-					{
-						mDataProvider.setHistorySelectedItemPosition(position);
-					}
 					startAction(R.id.history_menu_action_bookmark);
 
 					HistoryRow hist_row = mDataProvider.getHistoryList().get(position);
@@ -213,10 +205,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 					mDataProvider.getLocalDataBase().addToFavorite(hist_row.getId());
 					if (mAdapter != null)
 					{
-						synchronized (mAdapter)
-						{
-							mAdapter.notifyItemChanged(pos);
-						}
+						mAdapter.notifyItemChanged(pos);
 					}
 				}
 				break;
@@ -228,10 +217,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 					mDataProvider.getLocalDataBase().delFromHistory(hist_row.getId());
 					if (mAdapter != null)
 					{
-						synchronized (mAdapter)
-						{
-							mAdapter.notifyItemRemoved(pos);
-						}
+						mAdapter.notifyItemRemoved(pos);
 					}
 				}
 				break;
@@ -284,31 +270,28 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	{
 		if (mAdapter != null)
 		{
-			synchronized (mAdapter)
+			mAdapter.setList(mDataProvider.getHistoryList());
+
+			int pos = mAdapter.getSelectedPosition();
+			if (pos != -1)
 			{
-				mAdapter.setList(mDataProvider.getHistoryList());
-
-				int pos = mAdapter.getSelectedPosition();
-				if (pos != -1)
+				switch (action)
 				{
-					switch (action)
-					{
-						case REFRESH:
-							mAdapter.notifyDataSetChanged();
-							break;
+					case REFRESH:
+						mAdapter.notifyDataSetChanged();
+						break;
 
-						case ITEM_DEL:
-							mAdapter.notifyItemRemoved(pos);
-							break;
+					case ITEM_DEL:
+						mAdapter.notifyItemRemoved(pos);
+						break;
 
-						case ITEM_ADD:
-							mAdapter.notifyItemInserted(pos);
-							break;
+					case ITEM_ADD:
+						mAdapter.notifyItemInserted(pos);
+						break;
 
-						case ITEM_CHANGED:
-							mAdapter.notifyItemChanged(pos);
-							break;
-					}
+					case ITEM_CHANGED:
+						mAdapter.notifyItemChanged(pos);
+						break;
 				}
 			}
 		}

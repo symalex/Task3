@@ -234,7 +234,7 @@ public class DataProvider implements LocalDataBaseListener
 		mLocalDataBase.open();
 		try
 		{
-			mProgressMax = 5 + mLocalDataBase.getDbHelper().getHistoryDAO().getHistoryRecordCount() + mLocalDataBase.getDbHelper().getFavoriteDAO().getFavoriteRecordCount();
+			mProgressMax = 5 + (int) mLocalDataBase.getDbHelper().getHistoryDAO().getHistoryRecordCount() + (int) mLocalDataBase.getDbHelper().getFavoriteDAO().getFavoriteRecordCount();
 		}
 		catch (SQLException e)
 		{
@@ -275,7 +275,7 @@ public class DataProvider implements LocalDataBaseListener
 		mProgress += 1;
 		mFavoriteList = (ArrayList<FavoriteRow>) ((ArrayList<FavoriteRow>) list).clone();
 
-		Log.d(TAG, helper.getMethodName(this, 0, String.valueOf(mFavoriteList.size()) ));
+		Log.d(TAG, helper.getMethodName(this, 0, String.valueOf(mFavoriteList.size())));
 	}
 
 	@Override
@@ -293,13 +293,13 @@ public class DataProvider implements LocalDataBaseListener
 	@Override
 	public void onDBAddFavoriteComplete(LocalDataBaseTask task, FavoriteRow row)
 	{
-		Log.d(TAG, helper.getMethodName(this, 0, String.valueOf(mFavoriteList.size()) ));
+		Log.d(TAG, helper.getMethodName(this, 0, String.valueOf(mFavoriteList.size())));
 	}
 
 	@Override
 	public void onDBDelFavoriteComplete(LocalDataBaseTask task, int result)
 	{
-		Log.d(TAG, helper.getMethodName(this, 0, String.valueOf(mFavoriteList.size()) ));
+		Log.d(TAG, helper.getMethodName(this, 0, String.valueOf(mFavoriteList.size())));
 	}
 
 	@Override

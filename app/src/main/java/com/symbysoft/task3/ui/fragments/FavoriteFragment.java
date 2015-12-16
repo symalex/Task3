@@ -63,10 +63,6 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 			switch (swipeDir)
 			{
 				case ItemTouchHelper.LEFT:
-					Log.d(TAG, "Delete item");
-					startAction(R.id.favorite_menu_action_delete);
-					break;
-
 				case ItemTouchHelper.RIGHT:
 					Log.d(TAG, "Delete item");
 					startAction(R.id.favorite_menu_action_delete);
@@ -115,11 +111,8 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	{
 		if (mAdapter != null)
 		{
-			synchronized(mAdapter)
-			{
-				mAdapter.setList(mDataProvider.getFavoriteList());
-				mAdapter.notifyDataSetChanged();
-			}
+			mAdapter.setList(mDataProvider.getFavoriteList());
+			mAdapter.notifyDataSetChanged();
 		}
 	}
 
@@ -178,10 +171,7 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 					mDataProvider.getLocalDataBase().delFromFavorite(fav_row.getId());
 					if (mAdapter != null)
 					{
-						synchronized(mAdapter)
-						{
-							mAdapter.notifyItemRemoved(pos);
-						}
+						mAdapter.notifyItemRemoved(pos);
 					}
 				}
 				break;

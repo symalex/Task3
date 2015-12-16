@@ -103,4 +103,17 @@ public class HistoryRow
 		return this;
 	}
 
+	@Override
+	public String toString()
+	{
+		return String.format("{\"%s\"=\"%d\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%d\"}",
+				KEY_ID, mId,
+				DATE_TIME, mDt,
+				DIRECTION, mDirection,
+				SOURCE, mSource,
+				DEST, mDestination,
+				FAV_ID, mFavId
+		);
+	}
+
 }

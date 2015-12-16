@@ -183,11 +183,13 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 			case DB_ACTION_ADD_FAVORITE:
 				try
 				{
-					HistoryRow hr = new HistoryRow();
-					FavoriteRow fr = new FavoriteRow();
-					fr.setHistory(hr);
-					hr.setId(mValues.getAsLong(FavoriteRow.HIST_ID));
 					mDbHelper.getFavoriteDAO().insert_by_hist_id(mValues.getAsLong(FavoriteRow.HIST_ID));
+					long id = mDbHelper.getFavoriteDAO().find_by_hist_id(mValues.getAsLong(FavoriteRow.HIST_ID));
+
+					FavoriteRow fr = new FavoriteRow();
+					HistoryRow hr = new HistoryRow();
+					fr.setId(id);
+					fr.setHistory(hr);
 					mDbHelper.getFavoriteDAO().refresh(fr);
 					ret = fr;
 				}

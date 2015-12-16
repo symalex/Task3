@@ -300,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 		{
 			mDrawer.closeDrawer(GravityCompat.START);
 		}
-		else if( mFragment instanceof SettingsFragment || mFragment instanceof HistoryFragment || mFragment instanceof FavoriteFragment )
+		else if (mFragment instanceof SettingsFragment || mFragment instanceof HistoryFragment || mFragment instanceof FavoriteFragment)
 		{
 			navigateFragment(FragmentPage.MAIN_FRAGMENT);
 		}

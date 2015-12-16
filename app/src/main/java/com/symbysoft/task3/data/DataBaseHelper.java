@@ -101,13 +101,13 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 			return this.queryRaw(query, mapper).getResults();
 		}
 
-		public int getHistoryRecordCount()
+		public long getHistoryRecordCount()
 		{
-			int ret = 0;
+			long ret = 0;
 			try
 			{
-				String str = this.queryRaw("SELECT COUNT(*) FROM " + HistoryRow.TABLE_NAME).getFirstResult()[0];
-				ret = Integer.parseInt(str);
+				QueryBuilder<HistoryRow, Long> builder = this.queryBuilder();
+				ret = builder.countOf();
 			}
 			catch (SQLException e)
 			{
@@ -129,19 +129,27 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 			super(connectionSource, dataClass);
 		}
 
-		public int getFavoriteRecordCount()
+		public long getFavoriteRecordCount()
 		{
-			int ret = 0;
+			long ret = 0;
 			try
 			{
-				String str = this.queryRaw("SELECT COUNT(*) FROM " + FavoriteRow.TABLE_NAME).getFirstResult()[0];
-				ret = Integer.parseInt(str);
+				QueryBuilder<FavoriteRow, Long> builder = this.queryBuilder();
+				ret = builder.countOf();
 			}
 			catch (SQLException e)
 			{
 				e.printStackTrace();
 			}
 			return ret;
+		}
+
+		public long find_by_hist_id(long hist_id) throws SQLException
+		{
+			QueryBuilder<FavoriteRow, Long> builder = this.queryBuilder();
+			PreparedQuery query = builder.where().eq(FavoriteRow.HIST_ID, hist_id).prepare();
+			String[] r_arr = queryRaw(query.getStatement()).getFirstResult();
+			return r_arr == null ? 0 : Long.valueOf(r_arr[0]);
 		}
 
 		public int delete_by_hist_id(long hist_id) throws SQLException
@@ -158,10 +166,9 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 			String[] r_arr = queryRaw(query.getStatement()).getFirstResult();
 			if (r_arr == null)
 			{
-				// INSERT INTO favorites (hist_id) VALUES (value1);
 				queryRaw(String.format("INSERT INTO `%s` (`%s`) VALUES (%d)", FavoriteRow.TABLE_NAME, FavoriteRow.HIST_ID, hist_id));
 			}
-			return 0;
+			return r_arr == null ? 0 : 1;
 		}
 
 		public List<FavoriteRow> getAll() throws SQLException

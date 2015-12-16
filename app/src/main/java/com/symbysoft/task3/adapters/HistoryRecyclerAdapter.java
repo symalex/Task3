@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -114,20 +115,14 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position)
 	{
-		if (mSelectedPosition == position)
-		{
-			holder.mRelativeLayout.setBackgroundColor(Color.parseColor("#00FF00"));
-		}
-		else
-		{
-			holder.mRelativeLayout.setBackgroundColor(Color.parseColor("#FEFFFF"));
-		}
-		holder.mRelativeLayout.setSelected(mSelectedPosition == position);
+		holder.mLayout.setSelected(mSelectedPosition == position);
+
 		HistoryRow hist_row = mList.get(position);
 		holder.mSrcTextView.setText(hist_row.getSource());
 		holder.mDestTextView.setText(hist_row.getDestination());
 		holder.mBtnFavorite.setText(hist_row.getDirection());
 		holder.mBtnFavorite.setPressed(hist_row.getFavId() != 0);
+		holder.mBtnFavorite.setSelected(hist_row.getFavId() != 0);
 	}
 
 	@Override

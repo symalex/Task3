@@ -4,7 +4,7 @@ import android.util.Log;
 
 public class helper
 {
-	public static String getMethodName(Object o, final int depth, String ... args)
+	public static String getMethodName(Object o, final int depth, String... args)
 	{
 		final StackTraceElement[] ste = Thread.currentThread().getStackTrace();
 		String ret = o.getClass().getSimpleName() + '.' + ste[depth + 3].getMethodName();
@@ -12,7 +12,7 @@ public class helper
 		{
 			ret += ": ";
 		}
-		for( String  s : args)
+		for (String s : args)
 		{
 			ret += s;
 		}

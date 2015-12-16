@@ -231,33 +231,31 @@ public class LocalDataBase implements LocalDataBaseListener
 				switch (action)
 				{
 					case RA_READ_FAVORITE:
-						listener.onDBReadFavoriteComplete(task, (List<FavoriteRow>)list);
+						listener.onDBReadFavoriteComplete(task, (List<FavoriteRow>) list);
 						break;
 
 					case RA_READ_HISTORY:
-						listener.onDBReadHistoryComplete(task, (List<HistoryRow>)list);
+						listener.onDBReadHistoryComplete(task, (List<HistoryRow>) list);
 						break;
 
 					case RA_ADD_HISTORY:
 						listener.onDBAddHistoryComplete(task, (HistoryRow) list);
-						readHistory();
+						getFavoriteAndHistoryData();
 						break;
 
 					case RA_DEL_HISTORY:
 						listener.onDBDelHistoryComplete(task, (int) list);
-						readHistory();
+						getFavoriteAndHistoryData();
 						break;
 
 					case RA_ADD_FAVORITE:
 						listener.onDBAddFavoriteComplete(task, (FavoriteRow) list);
-						readHistory();
-						readFavorite();
+						getFavoriteAndHistoryData();
 						break;
 
 					case RA_DEL_FAVORITE:
-						listener.onDBDelFavoriteComplete(task, (int)list);
-						readHistory();
-						readFavorite();
+						listener.onDBDelFavoriteComplete(task, (int) list);
+						getFavoriteAndHistoryData();
 						break;
 				}
 			}

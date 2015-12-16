@@ -51,4 +51,10 @@ public class FavoriteRow
 		}
 	}
 
+	@Override
+	public String toString()
+	{
+		return String.format("{\"%s\"=\"%d\", \"%s\"=%s}", KEY_ID, mId, HIST_ID, mHistory != null ? mHistory.toString() : "null");
+	}
+
 }

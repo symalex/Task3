@@ -1,16 +1,12 @@
 package com.symbysoft.task3.network;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
+import com.symbysoft.task3.network.YandexTranslateAPIData.LangDetectData;
+import com.symbysoft.task3.network.YandexTranslateAPIData.LangsData;
+import com.symbysoft.task3.network.YandexTranslateAPIData.TranslateData;
 
 import retrofit.Call;
 import retrofit.http.GET;
 import retrofit.http.Query;
-import com.symbysoft.task3.network.YandexTranslateAPIData.YandexApiResult;
-import com.symbysoft.task3.network.YandexTranslateAPIData.LangsData;
-import com.symbysoft.task3.network.YandexTranslateAPIData.LangDetectData;
-import com.symbysoft.task3.network.YandexTranslateAPIData.TranslateData;
 
 public interface YandexApiRequest
 {

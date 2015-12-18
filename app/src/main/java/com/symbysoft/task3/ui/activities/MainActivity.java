@@ -3,7 +3,9 @@ package com.symbysoft.task3.ui.activities;
 import java.util.Map;
 import java.util.Set;
 
+import android.app.ActionBar;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -17,8 +19,10 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 
 import butterknife.Bind;
@@ -109,6 +113,12 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 			intent = new Intent(this, SplashActivity.class);
 			startActivity(intent);
 		}
+	}
+
+	@Override
+	public boolean onKeyLongPress(int keyCode, KeyEvent event)
+	{
+		return super.onKeyLongPress(keyCode, event);
 	}
 
 	@OnClick(R.id.app_bar_main_btn_translate)
@@ -221,6 +231,7 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 	{
 		if (mCurPage != page || mFragment == null)
 		{
+			android.support.v7.app.ActionBar actionBar = getSupportActionBar();
 			switch (page)
 			{
 				case MAIN_FRAGMENT:
@@ -231,22 +242,38 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 						mBtnTranslate.setVisibility(View.VISIBLE);
 					}
 					((MainFragment) mFragment).setBtnTranslate(mBtnTranslate);
+					if (actionBar != null)
+					{
+						actionBar.setTitle("Main app");
+					}
 					break;
 
 				case HISTORY_FRAGMENT:
 					mBtnTranslate.setVisibility(View.GONE);
 					mFragment = setFragment(R.id.app_bar_main_frame_main_container_id, HistoryFragment.newInstance(), HistoryFragment.FTAG);
 					mNavigationView.setCheckedItem(R.id.nav_history);
+					if (actionBar != null)
+					{
+						actionBar.setTitle("History");
+					}
 					break;
 
 				case FAVORITES_FRAGMENT:
 					mBtnTranslate.setVisibility(View.GONE);
 					mFragment = setFragment(R.id.app_bar_main_frame_main_container_id, FavoriteFragment.newInstance(), FavoriteFragment.FTAG);
 					mNavigationView.setCheckedItem(R.id.nav_favorites);
+					if (actionBar != null)
+					{
+						actionBar.setTitle("Favorite");
+					}
 					break;
 
 				case SETTING_FRAGMENT:
 					mBtnTranslate.setVisibility(View.GONE);
+					if (actionBar != null)
+					{
+						actionBar.setTitle("Settings");
+					}
 					if (mDataProvider != null)
 					{
 						mFragment = setFragment(R.id.app_bar_main_frame_main_container_id, SettingsFragment.newInstance(), SettingsFragment.FTAG);

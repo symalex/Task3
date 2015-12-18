@@ -2,9 +2,11 @@ package com.symbysoft.task3.adapters;
 
 import java.util.ArrayList;
 
+import android.app.Activity;
 import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +25,11 @@ import com.symbysoft.task3.data.HistoryRow;
 
 public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecyclerAdapter.ViewHolder>
 {
+	private static final String TAG = "FavoriteRecyclerAdapter";
+
+	private boolean isLongClick = false;
 	private int mSelectedPosition = -1;
+	private Activity mActivity;
 	private ArrayList<FavoriteRow> mList;
 	private FavoriteRecyclerItemClickListener mOnItemClickListener;
 
@@ -47,9 +53,14 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 		mSelectedPosition = selectedPosition;
 	}
 
+	public boolean isLongClick()
+	{
+		return isLongClick;
+	}
+
 	public interface FavoriteRecyclerItemClickListener
 	{
-		void onItemClick(FavoriteRecyclerAdapter adapter, View view, int position, long id);
+		void onItemClick(FavoriteRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click);
 	}
 
 	public void setOnItemClickListener(FavoriteRecyclerItemClickListener listener)
@@ -57,7 +68,7 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 		mOnItemClickListener = listener;
 	}
 
-	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
+	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener
 	{
 		private LinearLayout mLayout;
 
@@ -81,6 +92,14 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 			mBtnFavorite.setFocusableInTouchMode(false);
 			mBtnFavorite.setFocusable(false);
 			mRelativeLayout.setOnClickListener(this);
+			mRelativeLayout.setOnLongClickListener(this);
+		}
+
+		@Override
+		public boolean onLongClick(View v)
+		{
+			isLongClick = true;
+			return false;
 		}
 
 		@Override
@@ -90,20 +109,32 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 			{
 				case R.id.item_history_card_view_layout:
 				case R.id.item_history_btn_favorite:
-					mSelectedPosition = getAdapterPosition();
+					if (isLongClick)
+					{
+						mSelectedPosition = getAdapterPosition();
+						notifyDataSetChanged();
+						Log.d(TAG, "LongClick: " + String.valueOf(getAdapterPosition()));
+					}
+					else
+					{
+						mSelectedPosition = -1;
+						Log.d(TAG, "Click: " + String.valueOf(getAdapterPosition()));
+					}
+					if (mOnItemClickListener != null)
+					{
+						mOnItemClickListener.onItemClick(FavoriteRecyclerAdapter.this, v, mSelectedPosition, getItemId(), isLongClick);
+					}
 					break;
 			}
-			notifyDataSetChanged();
-			if (mOnItemClickListener != null)
-			{
-				mOnItemClickListener.onItemClick(FavoriteRecyclerAdapter.this, v, mSelectedPosition, getItemId());
-			}
+
+			isLongClick = false;
 		}
 
 	}
 
-	public FavoriteRecyclerAdapter(ArrayList<FavoriteRow> list)
+	public FavoriteRecyclerAdapter(Activity activity, ArrayList<FavoriteRow> list)
 	{
+		mActivity = activity;
 		mList = list;
 	}
 
@@ -117,7 +148,13 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position)
 	{
-		holder.mLayout.setSelected(mSelectedPosition == position);
+		Log.d(TAG, "Draw mSelectedPosition=" + String.valueOf(mSelectedPosition));
+		holder.mRelativeLayout.setPressed(mSelectedPosition == position);
+		//if (mSelectedPosition == position)
+		//{
+			//holder.mCardView.setBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+		//}
+
 		FavoriteRow frow = mList.get(position);
 		if (frow.getHistory() != null)
 		{

@@ -4,6 +4,7 @@ import java.util.List;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -12,11 +13,13 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
 
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
@@ -40,10 +43,9 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	protected RecyclerView mRecyclerView;
 	private RecyclerView.LayoutManager mLayoutManager;
 	private FavoriteRecyclerAdapter mAdapter;
+	private Menu mMenu;
 
 	private DataProvider mDataProvider;
-
-	private MenuItem mMenuItemDelete;
 
 	private final ItemTouchHelper.SimpleCallback mItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT)
 	{
@@ -94,8 +96,12 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		mLayoutManager = new LinearLayoutManager(getContext());
 		mRecyclerView.setLayoutManager(mLayoutManager);
 
+		//RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
+		RecyclerView.ItemAnimator itemAnimator = new SlideInUpAnimator();
+		mRecyclerView.setItemAnimator(itemAnimator);
+
 		// specify an adapter (see also next example)
-		mAdapter = new FavoriteRecyclerAdapter(mDataProvider.getFavoriteList());
+		mAdapter = new FavoriteRecyclerAdapter(getActivity(), mDataProvider.getFavoriteList());
 		mAdapter.setOnItemClickListener(this);
 		mRecyclerView.setAdapter(mAdapter);
 		mItemTouchHelper.attachToRecyclerView(mRecyclerView);
@@ -117,7 +123,7 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	}
 
 	@Override
-	public void onItemClick(FavoriteRecyclerAdapter adapter, View view, int position, long id)
+	public void onItemClick(FavoriteRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click)
 	{
 		switch (view.getId())
 		{
@@ -127,11 +133,21 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 				{
 					mDataProvider.setFavoriteSelectedItemPosition(position);
 				}
-				if (mMenuItemDelete != null)
-				{
-					mMenuItemDelete.setVisible(true);
-				}
+				UpdateMenu();
 				break;
+		}
+	}
+
+	private void UpdateMenu()
+	{
+		if (mMenu != null)
+		{
+			mMenu.findItem(R.id.action_settings).setVisible(false);
+			if (mAdapter != null)
+			{
+				mMenu.findItem(R.id.favorite_menu_action_go).setVisible(mAdapter.getSelectedPosition() != -1);
+				mMenu.findItem(R.id.favorite_menu_action_delete).setVisible(mAdapter.getSelectedPosition() != -1);
+			}
 		}
 	}
 
@@ -139,15 +155,10 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
 	{
 		super.onCreateOptionsMenu(menu, inflater);
+		mMenu = menu;
 
 		inflater.inflate(R.menu.favorite_menu, menu);
-
-		menu.findItem(R.id.action_settings).setVisible(false);
-		if (mAdapter != null && mAdapter.getSelectedPosition() == -1)
-		{
-			mMenuItemDelete = menu.findItem(R.id.favorite_menu_action_delete);
-			mMenuItemDelete.setVisible(false);
-		}
+		UpdateMenu();
 	}
 
 	private void startAction(int action_id)
@@ -251,5 +262,4 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	{
 		Log.d(TAG, helper.getMethodName(this, 0));
 	}
-
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,8 @@ import com.symbysoft.task3.data.HistoryRow;
 
 public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecyclerAdapter.ViewHolder>
 {
+	private static final String TAG = "HistoryRecyclerAdapter";
+
 	private int mSelectedPosition = -1;
 	private ArrayList<HistoryRow> mList;
 	private HistoryRecyclerItemClickListener mOnItemClickListener;
@@ -89,9 +92,11 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 				case R.id.item_history_card_view_layout:
 				case R.id.item_history_btn_favorite:
 					mSelectedPosition = getAdapterPosition();
+					Log.d(TAG, "Click: " + String.valueOf(getAdapterPosition()));
 					break;
 			}
 			notifyDataSetChanged();
+			//notifyItemChanged(mSelectedPosition);
 			if (mOnItemClickListener != null)
 			{
 				mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, mSelectedPosition, getItemId());
@@ -115,14 +120,14 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position)
 	{
-		holder.mLayout.setSelected(mSelectedPosition == position);
+		Log.d(TAG, "Draw on Click: " + String.valueOf(mSelectedPosition));
+		holder.mCardView.setPressed(mSelectedPosition == position);
 
 		HistoryRow hist_row = mList.get(position);
 		holder.mSrcTextView.setText(hist_row.getSource());
 		holder.mDestTextView.setText(hist_row.getDestination());
 		holder.mBtnFavorite.setText(hist_row.getDirection());
 		holder.mBtnFavorite.setPressed(hist_row.getFavId() != 0);
-		holder.mBtnFavorite.setSelected(hist_row.getFavId() != 0);
 	}
 
 	@Override

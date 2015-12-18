@@ -2,6 +2,8 @@ package com.symbysoft.task3.ui.fragments;
 
 import java.util.List;
 
+import android.app.ActionBar;
+import android.os.Build;
 import android.os.Handler;
 
 import java.util.logging.LogRecord;
@@ -21,6 +23,7 @@ import android.view.ViewGroup;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
 
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
@@ -112,6 +115,8 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		// use a linear layout manager
 		mLayoutManager = new LinearLayoutManager(getContext());
 		mRecyclerView.setLayoutManager(mLayoutManager);
+		RecyclerView.ItemAnimator itemAnimator = new SlideInUpAnimator();
+		mRecyclerView.setItemAnimator(itemAnimator);
 
 		// specify an adapter (see also next example)
 		mAdapter = new HistoryRecyclerAdapter(mDataProvider.getHistoryList());

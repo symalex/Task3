@@ -8,7 +8,10 @@ import android.content.ContentValues;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
+import com.j256.ormlite.dao.CloseableIterator;
+import com.j256.ormlite.dao.CloseableWrappedIterable;
+
+public class LocalDataBaseTask extends AsyncTask<Void, Integer, Object>
 {
 	private static final String TAG = "LocalDataBaseTask";
 
@@ -25,6 +28,11 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 		void onDBAddFavoriteComplete(LocalDataBaseTask task, FavoriteRow row);
 
 		void onDBDelFavoriteComplete(LocalDataBaseTask task, int result);
+	}
+
+	public interface LocalDataBaseProgressListener
+	{
+		void onDbProgress(LocalDataBaseTask task, int current, int max);
 	}
 
 	public enum LocalDataBaseAction
@@ -45,6 +53,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 	private final ContentValues mValues;
 
 	private LocalDataBaseListener mListener;
+	private LocalDataBaseProgressListener mProgressListener;
 
 	public LocalDataBaseAction getAction()
 	{
@@ -59,6 +68,11 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 	public void setListener(LocalDataBaseListener listener)
 	{
 		mListener = listener;
+	}
+
+	public void setProgressListener(LocalDataBaseProgressListener progressListener)
+	{
+		mProgressListener = progressListener;
 	}
 
 	LocalDataBaseTask(DataBaseHelper helper)
@@ -113,6 +127,47 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 		execute();
 	}
 
+	private <T> ArrayList<T> readRecordsWithProgress(CloseableWrappedIterable<T> iterable)
+	{
+		ArrayList<T> list = null;
+		try
+		{
+			list = new ArrayList<>();
+			int count = (int) mDbHelper.getFavoriteDAO().getFavoriteRecordCount();
+			for (T row : iterable)
+			{
+				publishProgress(list.size(), count);
+				if( row instanceof FavoriteRow )
+				{
+					((FavoriteRow)row).getHistory().setFavId(((FavoriteRow) row).getId());
+				}
+				list.add(row);
+				Log.d(TAG, row.toString());
+			}
+			iterable.close();
+			iterable = null;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (iterable != null)
+				{
+					iterable.close();
+				}
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return list;
+	}
+
 	@Override
 	protected Object doInBackground(Void... params)
 	{
@@ -123,12 +178,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 			case DB_ACTION_READ_FAVORITE_DATA:
 				try
 				{
-					List<FavoriteRow> rows = mDbHelper.getFavoriteDAO().getAll();
-					for (FavoriteRow row : rows)
-					{
-						Log.d(TAG, row.toString());
-					}
-					ret = rows;
+					ret = readRecordsWithProgress(mDbHelper.getFavoriteDAO().getWrappedIterable());
 				}
 				catch (SQLException e)
 				{
@@ -140,6 +190,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 				try
 				{
 					ret = mDbHelper.getHistoryDAO().getAll(mDbHelper.getFavoriteDAO());
+					publishProgress();
 				}
 				catch (SQLException e)
 				{
@@ -212,6 +263,17 @@ public class LocalDataBaseTask extends AsyncTask<Void, Void, Object>
 
 		}
 		return ret;
+	}
+
+	@Override
+	protected void onProgressUpdate(Integer... values)
+	{
+		super.onProgressUpdate(values);
+
+		if (mProgressListener != null && values.length >= 2)
+		{
+			mProgressListener.onDbProgress(this, values[0], values[1]);
+		}
 	}
 
 	@SuppressWarnings("unchecked")

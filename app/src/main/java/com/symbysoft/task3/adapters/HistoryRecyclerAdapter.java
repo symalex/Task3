@@ -1,32 +1,33 @@
 package com.symbysoft.task3.adapters;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
-import android.graphics.Color;
+import android.app.Activity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.symbysoft.task3.R;
+import com.symbysoft.task3.data.HistoryRow;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-
-import com.symbysoft.task3.data.HistoryRow;
 
 public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecyclerAdapter.ViewHolder>
 {
 	private static final String TAG = "HistoryRecyclerAdapter";
 
+	private boolean isLongClick = false;
 	private int mSelectedPosition = -1;
+	private Activity mActivity;
 	private ArrayList<HistoryRow> mList;
 	private HistoryRecyclerItemClickListener mOnItemClickListener;
 
@@ -52,7 +53,7 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 
 	public interface HistoryRecyclerItemClickListener
 	{
-		void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id);
+		void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click);
 	}
 
 	public void setOnItemClickListener(HistoryRecyclerItemClickListener listener)
@@ -60,28 +61,35 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 		mOnItemClickListener = listener;
 	}
 
-	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
+	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener
 	{
 		private LinearLayout mLayout;
 
 		@Bind(R.id.item_history_card_view)
 		protected CardView mCardView;
-		@Bind(R.id.item_history_card_view_layout)
-		protected RelativeLayout mRelativeLayout;
-		@Bind(R.id.item_history_btn_favorite)
-		protected Button mBtnFavorite;
+		@Bind(R.id.item_history_textview_favorite)
+		protected TextView mBtnFavorite;
 		@Bind(R.id.item_history_top_text)
 		protected TextView mSrcTextView;
 		@Bind(R.id.item_history_bottom_text)
 		protected TextView mDestTextView;
+		@Bind(R.id.item_history_date_time)
+		protected TextView mDateTimeTextView;
 
-		public ViewHolder(LinearLayout view)
+		public ViewHolder(View view)
 		{
 			super(view);
-			mLayout = view;
 			ButterKnife.bind(this, view);
 			mBtnFavorite.setOnClickListener(this);
-			mRelativeLayout.setOnClickListener(this);
+			mCardView.setOnClickListener(this);
+			mCardView.setOnLongClickListener(this);
+		}
+
+		@Override
+		public boolean onLongClick(View v)
+		{
+			isLongClick = true;
+			return false;
 		}
 
 		@Override
@@ -89,45 +97,85 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 		{
 			switch (v.getId())
 			{
-				case R.id.item_history_card_view_layout:
-				case R.id.item_history_btn_favorite:
-					mSelectedPosition = getAdapterPosition();
-					Log.d(TAG, "Click: " + String.valueOf(getAdapterPosition()));
+				case R.id.item_history_card_view:
+					if (isLongClick)
+					{
+						mSelectedPosition = getAdapterPosition();
+						Log.d(TAG, "Click: " + String.valueOf(getAdapterPosition()));
+					}
+					else
+					{
+						mSelectedPosition = -1;
+						Log.d(TAG, "Click: " + String.valueOf(getAdapterPosition()));
+					}
+					notifyDataSetChanged();
+					if (mOnItemClickListener != null)
+					{
+						mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, mSelectedPosition, getItemId(), isLongClick);
+					}
+					break;
+
+				case R.id.item_history_textview_favorite:
+					if (mOnItemClickListener != null)
+					{
+						mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, getAdapterPosition(), getItemId(), isLongClick);
+					}
+					notifyDataSetChanged();
 					break;
 			}
-			notifyDataSetChanged();
-			//notifyItemChanged(mSelectedPosition);
-			if (mOnItemClickListener != null)
-			{
-				mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, mSelectedPosition, getItemId());
-			}
+
+			isLongClick = false;
 		}
 
 	}
 
-	public HistoryRecyclerAdapter(ArrayList<HistoryRow> list)
+	public HistoryRecyclerAdapter(Activity activity, ArrayList<HistoryRow> list)
 	{
+		mActivity = activity;
 		mList = list;
 	}
 
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
 	{
-		LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false);
-		return new ViewHolder(v);
+		return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false));
 	}
 
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position)
 	{
 		Log.d(TAG, "Draw on Click: " + String.valueOf(mSelectedPosition));
-		holder.mCardView.setPressed(mSelectedPosition == position);
+
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP)
+		{
+
+		}
+		else
+		{
+			if (mSelectedPosition == position)
+			{
+				holder.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+			}
+			else
+			{
+				holder.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.cardview_light_background));
+			}
+		}
 
 		HistoryRow hist_row = mList.get(position);
 		holder.mSrcTextView.setText(hist_row.getSource());
 		holder.mDestTextView.setText(hist_row.getDestination());
 		holder.mBtnFavorite.setText(hist_row.getDirection());
-		holder.mBtnFavorite.setPressed(hist_row.getFavId() != 0);
+		SimpleDateFormat dtf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
+		holder.mDateTimeTextView.setText(dtf.format(hist_row.getDt()));
+		if (hist_row.getFavId() != 0)
+		{
+			holder.mBtnFavorite.setBackgroundResource(android.R.drawable.btn_star_big_on);
+		}
+		else
+		{
+			holder.mBtnFavorite.setBackgroundResource(android.R.drawable.btn_star_big_off);
+		}
 	}
 
 	@Override

@@ -1,6 +1,8 @@
 package com.symbysoft.task3.adapters;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import android.app.Activity;
 import android.graphics.Color;
@@ -70,29 +72,27 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 
 	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener
 	{
-		private LinearLayout mLayout;
-
+		@Bind(R.id.item_history_status_area)
+		protected LinearLayout mStatusArea;
 		@Bind(R.id.item_history_card_view)
 		protected CardView mCardView;
-		@Bind(R.id.item_history_card_view_layout)
-		protected RelativeLayout mRelativeLayout;
-		@Bind(R.id.item_history_btn_favorite)
-		protected Button mBtnFavorite;
+		@Bind(R.id.item_history_textview_favorite)
+		protected TextView mBtnFavorite;
 		@Bind(R.id.item_history_top_text)
 		protected TextView mSrcTextView;
 		@Bind(R.id.item_history_bottom_text)
 		protected TextView mDestTextView;
+		@Bind(R.id.item_history_date_time)
+		protected TextView mDateTimeTextView;
 
-		public ViewHolder(LinearLayout view)
+		public ViewHolder(View view)
 		{
 			super(view);
-			mLayout = view;
 			ButterKnife.bind(this, view);
-			mBtnFavorite.setClickable(false);
-			mBtnFavorite.setFocusableInTouchMode(false);
-			mBtnFavorite.setFocusable(false);
-			mRelativeLayout.setOnClickListener(this);
-			mRelativeLayout.setOnLongClickListener(this);
+			mStatusArea.setVisibility(View.GONE);
+			mBtnFavorite.setBackgroundResource(android.R.drawable.btn_star_big_on);
+			mCardView.setOnClickListener(this);
+			mCardView.setOnLongClickListener(this);
 		}
 
 		@Override
@@ -107,12 +107,10 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 		{
 			switch (v.getId())
 			{
-				case R.id.item_history_card_view_layout:
-				case R.id.item_history_btn_favorite:
+				case R.id.item_history_card_view:
 					if (isLongClick)
 					{
 						mSelectedPosition = getAdapterPosition();
-						notifyDataSetChanged();
 						Log.d(TAG, "LongClick: " + String.valueOf(getAdapterPosition()));
 					}
 					else
@@ -120,6 +118,7 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 						mSelectedPosition = -1;
 						Log.d(TAG, "Click: " + String.valueOf(getAdapterPosition()));
 					}
+					notifyDataSetChanged();
 					if (mOnItemClickListener != null)
 					{
 						mOnItemClickListener.onItemClick(FavoriteRecyclerAdapter.this, v, mSelectedPosition, getItemId(), isLongClick);
@@ -141,19 +140,29 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
 	{
-		LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false);
-		return new ViewHolder(v);
+		return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false));
 	}
 
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position)
 	{
 		Log.d(TAG, "Draw mSelectedPosition=" + String.valueOf(mSelectedPosition));
-		holder.mRelativeLayout.setPressed(mSelectedPosition == position);
-		//if (mSelectedPosition == position)
-		//{
-			//holder.mCardView.setBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
-		//}
+
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP)
+		{
+
+		}
+		else
+		{
+			if (mSelectedPosition == position)
+			{
+				holder.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+			}
+			else
+			{
+				holder.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.cardview_light_background));
+			}
+		}
 
 		FavoriteRow frow = mList.get(position);
 		if (frow.getHistory() != null)
@@ -161,8 +170,9 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<FavoriteRecycl
 			holder.mSrcTextView.setText(frow.getHistory().getSource());
 			holder.mDestTextView.setText(frow.getHistory().getDestination());
 			holder.mBtnFavorite.setText(frow.getHistory().getDirection());
+			SimpleDateFormat dtf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
+			holder.mDateTimeTextView.setText(dtf.format(frow.getHistory().getDt()));
 		}
-		holder.mBtnFavorite.setPressed(true);
 	}
 
 	@Override

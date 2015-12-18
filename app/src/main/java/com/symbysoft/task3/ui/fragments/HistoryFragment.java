@@ -53,6 +53,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	protected RecyclerView mRecyclerView;
 	private RecyclerView.LayoutManager mLayoutManager;
 	private HistoryRecyclerAdapter mAdapter;
+	private Menu mMenu;
 
 	private MenuItem mMenuItemFavorite;
 	private MenuItem mMenuItemDelete;
@@ -119,7 +120,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		mRecyclerView.setItemAnimator(itemAnimator);
 
 		// specify an adapter (see also next example)
-		mAdapter = new HistoryRecyclerAdapter(mDataProvider.getHistoryList());
+		mAdapter = new HistoryRecyclerAdapter(getActivity(), mDataProvider.getHistoryList());
 		mAdapter.setOnItemClickListener(this);
 		mRecyclerView.setAdapter(mAdapter);
 		mItemTouchHelper.attachToRecyclerView(mRecyclerView);
@@ -132,7 +133,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	}
 
 	@Override
-	public void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id)
+	public void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click)
 	{
 		if (mDataProvider != null)
 		{
@@ -140,7 +141,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		}
 		switch (view.getId())
 		{
-			case R.id.item_history_card_view_layout:
+			case R.id.item_history_card_view:
 				if (mMenuItemFavorite != null)
 				{
 					mMenuItemFavorite.setVisible(true);
@@ -149,18 +150,19 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				{
 					mMenuItemDelete.setVisible(true);
 				}
+				UpdateMenu();
 				break;
 
-			case R.id.item_history_btn_favorite:
+			case R.id.item_history_textview_favorite:
 				if (mDataProvider != null && position >= 0 && position < mDataProvider.getHistoryList().size())
 				{
-					startAction(R.id.history_menu_action_bookmark);
+					startAction(R.id.history_menu_action_bookmark, position);
 
 					HistoryRow hist_row = mDataProvider.getHistoryList().get(position);
 					long in_fav_id = hist_row.getFavId();
 					if (in_fav_id == 0)
 					{
-						startAction(R.id.history_menu_action_bookmark);
+						startAction(R.id.history_menu_action_bookmark, position);
 					}
 					else
 					{
@@ -172,28 +174,42 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		}
 	}
 
+	private void UpdateMenu()
+	{
+		if (mMenu != null)
+		{
+			mMenu.findItem(R.id.action_settings).setVisible(false);
+			if (mAdapter != null)
+			{
+				mMenu.findItem(R.id.history_menu_action_go).setVisible(mAdapter.getSelectedPosition() != -1);
+				mMenu.findItem(R.id.history_menu_action_bookmark).setVisible(mAdapter.getSelectedPosition() != -1);
+				mMenu.findItem(R.id.history_menu_action_delete).setVisible(mAdapter.getSelectedPosition() != -1);
+			}
+		}
+	}
+
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
 	{
 		super.onCreateOptionsMenu(menu, inflater);
+		mMenu = menu;
 
 		inflater.inflate(R.menu.history_menu, menu);
-
-		menu.findItem(R.id.action_settings).setVisible(false);
-
-		if (mAdapter != null && mAdapter.getSelectedPosition() == -1)
-		{
-			mMenuItemFavorite = menu.findItem(R.id.history_menu_action_bookmark);
-			mMenuItemFavorite.setVisible(false);
-			mMenuItemDelete = menu.findItem(R.id.history_menu_action_delete);
-			mMenuItemDelete.setVisible(false);
-		}
+		UpdateMenu();
 	}
 
-	private void startAction(int action_id)
+	private void startAction(int action_id, int ... args)
 	{
 		HistoryRow hist_row;
-		int pos = mAdapter != null ? mAdapter.getSelectedPosition() : -1;
+		int pos;
+		if( args.length>0 )
+		{
+			pos = args[0];
+		}
+		else
+		{
+			pos = mAdapter != null ? mAdapter.getSelectedPosition() : -1;
+		}
 		switch (action_id)
 		{
 			case R.id.history_menu_action_go:

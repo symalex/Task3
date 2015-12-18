@@ -127,7 +127,7 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	{
 		switch (view.getId())
 		{
-			case R.id.item_history_card_view_layout:
+			case R.id.item_history_card_view:
 
 				if (mDataProvider != null)
 				{

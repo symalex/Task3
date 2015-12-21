@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -107,59 +106,11 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		@Override
 		public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir)
 		{
-			int pos = viewHolder.getAdapterPosition();
 			switch (swipeDir)
 			{
 				case ItemTouchHelper.LEFT:
 				case ItemTouchHelper.RIGHT:
-					Log.d(TAG, "Request delete item: " + pos);
-					if (mAdapter != null)
-					{
-						if (mAdapter.isEmptySelections() || mAdapter.isGoSelection())
-						{
-							mAdapter.requestDelete(pos);
-						}
-						else
-						{
-							if (!mAdapter.getSelections().contains(pos))
-							{
-								mAdapter.invertSelection(pos);
-							}
-							mAdapter.notifyDataSetChanged();
-
-							mSnackbar = Snackbar.make(getActivity().findViewById(R.id.fragment_favorite_list_view), "Remove selected items?", Snackbar.LENGTH_INDEFINITE)
-									.setCallback(new Snackbar.Callback()
-									{
-										@Override
-										public void onDismissed(Snackbar snackbar, int event)
-										{
-											switch (event)
-											{
-												case Snackbar.Callback.DISMISS_EVENT_SWIPE:
-												case Snackbar.Callback.DISMISS_EVENT_ACTION:
-												case Snackbar.Callback.DISMISS_EVENT_TIMEOUT:
-													mSnackbar = null;
-													if (mAdapter != null)
-													{
-														mAdapter.notifyDataSetChanged();
-													}
-													updateMenu();
-													break;
-											}
-										}
-									}).setAction("Remove", new View.OnClickListener()
-									{
-										@Override
-										public void onClick(View v)
-										{
-											mSnackbar = null;
-											startAction(R.id.favorite_menu_action_delete);
-											updateMenu();
-										}
-									});
-							mSnackbar.show();
-						}
-					}
+					requestDeleteItems(viewHolder.getAdapterPosition());
 					break;
 			}
 		}
@@ -203,6 +154,58 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		setHasOptionsMenu(true);
 
 		return view;
+	}
+
+	private void requestDeleteItems(int position)
+	{
+		Log.d(TAG, "Request delete item: " + position);
+		if (mAdapter != null)
+		{
+			if (mAdapter.isEmptySelections() || mAdapter.isGoSelection())
+			{
+				mAdapter.requestDelete(position);
+			}
+			else
+			{
+				if (!mAdapter.getSelections().contains(position))
+				{
+					mAdapter.invertSelection(position);
+				}
+				mAdapter.notifyDataSetChanged();
+
+				mSnackbar = Snackbar.make(getActivity().findViewById(R.id.fragment_favorite_list_view), "Remove selected items?", Snackbar.LENGTH_INDEFINITE)
+						.setCallback(new Snackbar.Callback()
+						{
+							@Override
+							public void onDismissed(Snackbar snackbar, int event)
+							{
+								switch (event)
+								{
+									case Snackbar.Callback.DISMISS_EVENT_SWIPE:
+									case Snackbar.Callback.DISMISS_EVENT_ACTION:
+									case Snackbar.Callback.DISMISS_EVENT_TIMEOUT:
+										mSnackbar = null;
+										if (mAdapter != null)
+										{
+											mAdapter.notifyDataSetChanged();
+										}
+										updateMenu();
+										break;
+								}
+							}
+						}).setAction("Remove", new View.OnClickListener()
+						{
+							@Override
+							public void onClick(View v)
+							{
+								mSnackbar = null;
+								startAction(R.id.favorite_menu_action_delete);
+								updateMenu();
+							}
+						});
+				mSnackbar.show();
+			}
+		}
 	}
 
 	private void updateList()
@@ -320,8 +323,14 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		switch (item.getItemId())
 		{
 			case R.id.favorite_menu_action_go:
-			case R.id.favorite_menu_action_delete:
 				startAction(item.getItemId());
+				return true;
+
+			case R.id.favorite_menu_action_delete:
+				if (mAdapter != null)
+				{
+					requestDeleteItems(mAdapter.getLastClickedPosition());
+				}
 				return true;
 
 			case R.id.favorite_menu_action_clear_selection:

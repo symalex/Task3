@@ -73,6 +73,11 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
 		return mRequestDeletePosition;
 	}
 
+	public int getLastClickedPosition()
+	{
+		return mLastClickedPosition;
+	}
+
 	public void setOnItemClickListener(FavoriteRecyclerItemClickListener listener)
 	{
 		mOnItemClickListener = listener;

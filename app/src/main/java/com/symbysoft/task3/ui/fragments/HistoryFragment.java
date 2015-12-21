@@ -2,9 +2,12 @@ package com.symbysoft.task3.ui.fragments;
 
 import java.util.List;
 
+import android.graphics.Canvas;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -15,10 +18,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
+import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter;
 import com.symbysoft.task3.adapters.HistoryRecyclerAdapter;
 import com.symbysoft.task3.adapters.HistoryRecyclerAdapter.HistoryRecyclerItemClickListener;
 import com.symbysoft.task3.common.helper;
@@ -36,7 +39,7 @@ import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
 //http://developer.android.com/intl/ru/training/material/lists-cards.html
 //http://code.tutsplus.com/tutorials/getting-started-with-recyclerview-and-cardview-on-android--cms-23465
 
-public class HistoryFragment extends Fragment implements LocalDataBaseListener, HistoryRecyclerItemClickListener
+public class HistoryFragment extends Fragment implements LocalDataBaseListener, HistoryRecyclerItemClickListener, HistoryRecyclerAdapter.HistoryRecyclerItemActionListener
 {
 	private final String TAG = "HistoryFragment";
 	public static final String FTAG = "history_fragment";
@@ -49,46 +52,79 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	private RecyclerView.LayoutManager mLayoutManager;
 	private HistoryRecyclerAdapter mAdapter;
 	private Menu mMenu;
+	private Snackbar mSnackbar;
 
 	private MenuItem mMenuItemFavorite;
 	private MenuItem mMenuItemDelete;
 
 	private DataProvider mDataProvider;
 
-	private enum ListAction
-	{
-		ITEM_DEL,
-		ITEM_ADD,
-		ITEM_CHANGED,
-		REFRESH
-	}
-
 	private final ItemTouchHelper.SimpleCallback mItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT)
 	{
+		private CardView mRequestCardView;
+		private boolean mIsElevated;
+
 		@Override
-		public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target)
+		public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive)
 		{
-			return false;
+			super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+
+			if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP && isCurrentlyActive && !mIsElevated)
+			{
+				//final float newElevation = 5f + ViewCompat.getElevation(viewHolder.itemView);
+				//ViewCompat.setElevation(viewHolder.itemView, newElevation);
+				mIsElevated = true;
+			}
+			else
+			{
+				if (viewHolder instanceof FavoriteRecyclerAdapter.ViewHolder)
+				{
+					FavoriteRecyclerAdapter.ViewHolder holder = (FavoriteRecyclerAdapter.ViewHolder) viewHolder;
+					CardView card = (CardView) holder.itemView;
+				}
+			}
+		}
+
+		@Override
+		public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder)
+		{
+			super.clearView(recyclerView, viewHolder);
+
+			if (viewHolder instanceof FavoriteRecyclerAdapter.ViewHolder)
+			{
+				FavoriteRecyclerAdapter.ViewHolder holder = (FavoriteRecyclerAdapter.ViewHolder) viewHolder;
+				CardView card = (CardView) holder.itemView;
+			}
+
+			mIsElevated = false;
+		}
+
+		@Override
+		public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target)
+		{
+			if (source.getItemViewType() != target.getItemViewType())
+			{
+				return false;
+			}
+
+			mAdapter.onItemMove(source.getAdapterPosition(), target.getAdapterPosition());
+			return true;
 		}
 
 		@Override
 		public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir)
 		{
-			if (mAdapter != null)
-			{
-				mAdapter.setSelectedPosition(viewHolder.getAdapterPosition());
-			}
 			switch (swipeDir)
 			{
 				case ItemTouchHelper.LEFT:
 				case ItemTouchHelper.RIGHT:
-					Log.d(TAG, "Delete item");
-					startAction(R.id.history_menu_action_delete);
+					requestDeleteItems(viewHolder.getAdapterPosition());
 					break;
 			}
 		}
 	};
 	private final ItemTouchHelper mItemTouchHelper = new ItemTouchHelper(mItemTouchCallback);
+
 
 	public static Fragment newInstance()
 	{
@@ -115,56 +151,85 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		mRecyclerView.setItemAnimator(itemAnimator);
 
 		// specify an adapter (see also next example)
-		mAdapter = new HistoryRecyclerAdapter(getActivity(), mDataProvider.getHistoryList());
+		mAdapter = new HistoryRecyclerAdapter(getActivity(), mRecyclerView, mDataProvider.getHistoryList());
 		mAdapter.setOnItemClickListener(this);
+		mAdapter.setOnItemActionListener(this);
 		mRecyclerView.setAdapter(mAdapter);
 		mItemTouchHelper.attachToRecyclerView(mRecyclerView);
 
-		mAdapter.setSelectedPosition(mDataProvider.getHistorySelectedItemPosition());
+		//mAdapter.setSelectedPosition(mDataProvider.getHistorySelectedItemPosition());
 
 		setHasOptionsMenu(true);
 
 		return view;
 	}
 
+	private void requestDeleteItems(int position)
+	{
+		Log.d(TAG, "Request delete item: " + position);
+		if (mAdapter != null)
+		{
+			if (mAdapter.isEmptySelections() || mAdapter.isGoSelection())
+			{
+				mAdapter.requestDelete(position);
+			}
+			else
+			{
+				if (!mAdapter.getSelections().contains(position))
+				{
+					mAdapter.invertSelection(position);
+				}
+				mAdapter.notifyDataSetChanged();
+
+				mSnackbar = Snackbar.make(getActivity().findViewById(R.id.fragment_favorite_list_view), "Remove selected items?", Snackbar.LENGTH_INDEFINITE)
+						.setCallback(new Snackbar.Callback()
+						{
+							@Override
+							public void onDismissed(Snackbar snackbar, int event)
+							{
+								switch (event)
+								{
+									case Snackbar.Callback.DISMISS_EVENT_SWIPE:
+									case Snackbar.Callback.DISMISS_EVENT_ACTION:
+									case Snackbar.Callback.DISMISS_EVENT_TIMEOUT:
+										mSnackbar = null;
+										if (mAdapter != null)
+										{
+											mAdapter.notifyDataSetChanged();
+										}
+										updateMenu();
+										break;
+								}
+							}
+						}).setAction("Remove", new View.OnClickListener()
+						{
+							@Override
+							public void onClick(View v)
+							{
+								mSnackbar = null;
+								startAction(R.id.history_menu_action_delete);
+								updateMenu();
+							}
+						});
+				mSnackbar.show();
+			}
+		}
+	}
+
 	@Override
 	public void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click)
 	{
-		/*
-		if (mDataProvider != null)
-		{
-			mDataProvider.setHistorySelectedItemPosition(position);
-		}*/
 		switch (view.getId())
 		{
 			case R.id.item_history_card_view:
-				if (mMenuItemFavorite != null)
-				{
-					mMenuItemFavorite.setVisible(true);
-				}
-				if (mMenuItemDelete != null)
-				{
-					mMenuItemDelete.setVisible(true);
-				}
-				if (!is_long_click)
-				{
-					Snackbar.make(getActivity().findViewById(R.id.fragment_history_list_view), "I'm a Snackbar", Snackbar.LENGTH_LONG).setAction("Action", new View.OnClickListener()
-					{
-						@Override
-						public void onClick(View v)
-						{
-							Toast.makeText(getActivity(), "Snackbar Action", Toast.LENGTH_LONG).show();
-						}
-					}).show();
-				}
-				UpdateMenu();
 				break;
 
 			case R.id.item_history_textview_favorite:
 				if (mDataProvider != null && position >= 0 && position < mDataProvider.getHistoryList().size())
 				{
-					startAction(R.id.history_menu_action_bookmark, position);
+					inverseBookmark(position);
 
+					/*
 					HistoryRow hist_row = mDataProvider.getHistoryList().get(position);
 					long in_fav_id = hist_row.getFavId();
 					if (in_fav_id == 0)
@@ -175,22 +240,37 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 					{
 						// remove from favorites
 						mDataProvider.getLocalDataBase().delFromFavorite(in_fav_id);
-					}
+					}*/
 				}
 				break;
 		}
+		updateMenu();
 	}
 
-	private void UpdateMenu()
+	@Override
+	public void onDoneDelete(HistoryRecyclerAdapter adapter, View view, int position)
+	{
+		startAction(R.id.history_menu_action_delete);
+		updateMenu();
+	}
+
+	@Override
+	public void onCancelDelete(HistoryRecyclerAdapter adapter, View view, int position)
+	{
+		updateMenu();
+	}
+
+	private void updateMenu()
 	{
 		if (mMenu != null)
 		{
 			mMenu.findItem(R.id.action_settings).setVisible(false);
 			if (mAdapter != null)
 			{
-				mMenu.findItem(R.id.history_menu_action_go).setVisible(mAdapter.getSelectedPosition() != -1);
-				mMenu.findItem(R.id.history_menu_action_bookmark).setVisible(mAdapter.getSelectedPosition() != -1);
-				mMenu.findItem(R.id.history_menu_action_delete).setVisible(mAdapter.getSelectedPosition() != -1);
+				mMenu.findItem(R.id.history_menu_action_go).setVisible(mAdapter.isGoSelection());
+				mMenu.findItem(R.id.history_menu_action_bookmark).setVisible(!mAdapter.isEmptySelections());
+				mMenu.findItem(R.id.history_menu_action_clear_selection).setVisible(!mAdapter.isEmptySelections());
+				mMenu.findItem(R.id.history_menu_action_delete).setVisible(!mAdapter.isEmptySelections());
 			}
 		}
 	}
@@ -202,20 +282,43 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		mMenu = menu;
 
 		inflater.inflate(R.menu.history_menu, menu);
-		UpdateMenu();
+		updateMenu();
+	}
+
+	private void inverseBookmark(int position, boolean... force)
+	{
+		if (position >= 0 && position < mDataProvider.getHistoryList().size())
+		{
+			HistoryRow row = mDataProvider.getHistoryList().get(position);
+			if (row.getFavId() == 0)
+			{
+				mDataProvider.getLocalDataBase().addToFavorite(row.getId());
+			}
+			else
+			{
+				if (force.length == 0)
+				{
+					mDataProvider.getLocalDataBase().delFromFavorite(row.getFavId());
+				}
+			}
+			if (mAdapter != null)
+			{
+				mAdapter.notifyItemChanged(position);
+			}
+		}
 	}
 
 	private void startAction(int action_id, int... args)
 	{
 		HistoryRow hist_row;
-		int pos;
-		if (args.length > 0)
+		int pos = args.length > 0 ? args[0] : -1;
+		if (mAdapter != null)
 		{
-			pos = args[0];
-		}
-		else
-		{
-			pos = mAdapter != null ? mAdapter.getSelectedPosition() : -1;
+			if (!mAdapter.isEmptySelections())
+			{
+				Object[] arr = mAdapter.getSelections().toArray();
+				pos = (int) arr[0];
+			}
 		}
 		switch (action_id)
 		{
@@ -227,25 +330,47 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				break;
 
 			case R.id.history_menu_action_bookmark:
-				if (pos >= 0 && pos < mDataProvider.getHistoryList().size())
+				if (mAdapter != null)
 				{
-					hist_row = mDataProvider.getHistoryList().get(pos);
-					mDataProvider.getLocalDataBase().addToFavorite(hist_row.getId());
-					if (mAdapter != null)
+					if (mAdapter.isEmptySelections())
 					{
-						mAdapter.notifyItemChanged(pos);
+						inverseBookmark(pos);
+					}
+					else
+					{
+						// multiple selections -> favorite
+						for (int p1 : mAdapter.getSelections())
+						{
+							inverseBookmark(p1);
+						}
 					}
 				}
 				break;
 
 			case R.id.history_menu_action_delete:
-				if (pos >= 0 && pos < mDataProvider.getHistoryList().size())
+				if (mAdapter != null)
 				{
-					hist_row = mDataProvider.getHistoryList().get(pos);
-					mDataProvider.getLocalDataBase().delFromHistory(hist_row.getId());
-					if (mAdapter != null)
+					pos = mAdapter.getRequestDeletePosition();
+					if (pos >= 0 && pos < mDataProvider.getHistoryList().size())
 					{
-						mAdapter.notifyItemRemoved(pos);
+						hist_row = mDataProvider.getHistoryList().get(pos);
+						mDataProvider.getLocalDataBase().delFromHistory(hist_row.getId());
+						mAdapter.cancelDelete(true);
+					}
+					else
+					{
+						if (!mAdapter.isEmptySelections())
+						{
+							// delete multiple selections
+							for (int p : mAdapter.getSelections())
+							{
+								hist_row = mDataProvider.getHistoryList().get(p);
+								mDataProvider.getLocalDataBase().delFromHistory(hist_row.getId());
+							}
+							mAdapter.cancelDelete(true);
+							mAdapter.clearSelections();
+							updateMenu();
+						}
 					}
 				}
 				break;
@@ -259,8 +384,24 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		{
 			case R.id.history_menu_action_go:
 			case R.id.history_menu_action_bookmark:
-			case R.id.history_menu_action_delete:
 				startAction(item.getItemId());
+				return true;
+
+			case R.id.history_menu_action_delete:
+				if (mAdapter != null)
+				{
+					requestDeleteItems(mAdapter.getLastClickedPosition());
+				}
+				return true;
+
+			case R.id.history_menu_action_clear_selection:
+				if (mAdapter != null)
+				{
+					mAdapter.clearSelections();
+					mAdapter.notifyDataSetChanged();
+					updateMenu();
+
+				}
 				return true;
 
 			default:
@@ -291,50 +432,35 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 			mDataProvider.getLocalDataBase().removeListener(this);
 		}
 
+		if (mSnackbar != null)
+		{
+			mSnackbar.dismiss();
+			mSnackbar = null;
+		}
+
 		super.onStop();
 	}
 
-	private void updateList(ListAction action)
+	private void updateList()
 	{
 		if (mAdapter != null)
 		{
 			mAdapter.setList(mDataProvider.getHistoryList());
-
-			int pos = mAdapter.getSelectedPosition();
-			if (pos != -1)
-			{
-				switch (action)
-				{
-					case REFRESH:
-						mAdapter.notifyDataSetChanged();
-						break;
-
-					case ITEM_DEL:
-						mAdapter.notifyItemRemoved(pos);
-						break;
-
-					case ITEM_ADD:
-						mAdapter.notifyItemInserted(pos);
-						break;
-
-					case ITEM_CHANGED:
-						mAdapter.notifyItemChanged(pos);
-						break;
-				}
-			}
+			mAdapter.notifyDataSetChanged();
 		}
 	}
 
 	@Override
 	public void onDBReadHistoryComplete(LocalDataBaseTask task, List<HistoryRow> list)
 	{
-		updateList(ListAction.REFRESH);
+		updateList();
 		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 
 	@Override
 	public void onDBReadFavoriteComplete(LocalDataBaseTask task, List<FavoriteRow> list)
 	{
+		updateList();
 		Log.d(TAG, helper.getMethodName(this, 0));
 	}
 

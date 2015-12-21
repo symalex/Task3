@@ -41,6 +41,18 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
 	private FavoriteRecyclerItemClickListener mOnItemClickListener;
 	private FavoriteRecyclerItemActionListener mOnItemActionListener;
 
+	public interface FavoriteRecyclerItemClickListener
+	{
+		void onItemClick(FavoriteRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click);
+	}
+
+	public interface FavoriteRecyclerItemActionListener
+	{
+		void onDoneDelete(FavoriteRecyclerAdapter adapter, View view, int position);
+
+		void onCancelDelete(FavoriteRecyclerAdapter adapter, View view, int position);
+	}
+
 	public ArrayList<FavoriteRow> getList()
 	{
 		return mList;
@@ -54,18 +66,6 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
 	public boolean isLongClick()
 	{
 		return isLongClick;
-	}
-
-	public interface FavoriteRecyclerItemClickListener
-	{
-		void onItemClick(FavoriteRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click);
-	}
-
-	public interface FavoriteRecyclerItemActionListener
-	{
-		void onDoneDelete(FavoriteRecyclerAdapter adapter, View view, int position);
-
-		void onCancelDelete(FavoriteRecyclerAdapter adapter, View view, int position);
 	}
 
 	public int getRequestDeletePosition()
@@ -137,7 +137,10 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
 				Log.d(TAG, "Click (invertSelection): " + mLastLongClickedPosition);
 				invertSelection(mLastClickedPosition);
 			}
-			//notifyDataSetChanged();
+			else
+			{
+				notifyDataSetChanged();
+			}
 
 			if (mOnItemClickListener != null)
 			{
@@ -271,6 +274,7 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
 	public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
 	{
 		RecyclerView.ViewHolder holder = null;
+
 		switch (viewType)
 		{
 			case 0:
@@ -290,38 +294,21 @@ public class FavoriteRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
 	public void onBindViewHolder(RecyclerView.ViewHolder holder, int position)
 	{
 		ViewHolder vh = null;
+
 		if (holder instanceof ViewHolder)
 		{
 			vh = (ViewHolder) holder;
 		}
-		/*else if (holder instanceof RequestViewHolder)
-		{
-
-		}*/
 
 		if (vh != null)
 		{
-			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP)
+			if (mSelections.contains(position))
 			{
-				if (mSelections.contains(position))
-				{
-					vh.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
-				}
-				else
-				{
-					vh.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.cardview_light_background));
-				}
+				vh.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
 			}
 			else
 			{
-				if (mSelections.contains(position))
-				{
-					vh.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
-				}
-				else
-				{
-					vh.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.cardview_light_background));
-				}
+				vh.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.cardview_light_background));
 			}
 
 			FavoriteRow frow = mList.get(position);

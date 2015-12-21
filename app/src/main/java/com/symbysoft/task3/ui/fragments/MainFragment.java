@@ -21,16 +21,15 @@ import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
 import com.symbysoft.task3.common.helper;
 import com.symbysoft.task3.data.DataProvider;
+import com.symbysoft.task3.data.DataProvider.DataProviderListener;
 import com.symbysoft.task3.network.InternetReceiver;
 import com.symbysoft.task3.network.InternetReceiver.InternetReceiverListener;
+import com.symbysoft.task3.network.YandexTranslateAPI;
+import com.symbysoft.task3.network.YandexTranslateAPI.YandexTranslateApiListener;
+import com.symbysoft.task3.network.YandexTranslateAPIData;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-
-import com.symbysoft.task3.data.DataProvider.DataProviderListener;
-import com.symbysoft.task3.network.YandexTranslateAPIData;
-import com.symbysoft.task3.network.YandexTranslateAPI;
-import com.symbysoft.task3.network.YandexTranslateAPI.YandexTranslateApiListener;
 
 public class MainFragment extends Fragment implements InternetReceiverListener, YandexTranslateApiListener, DataProviderListener
 {

@@ -8,7 +8,6 @@ import android.content.ContentValues;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.dao.CloseableWrappedIterable;
 
 public class LocalDataBaseTask extends AsyncTask<Void, Integer, Object>
@@ -137,9 +136,9 @@ public class LocalDataBaseTask extends AsyncTask<Void, Integer, Object>
 			for (T row : iterable)
 			{
 				publishProgress(list.size(), count);
-				if( row instanceof FavoriteRow )
+				if (row instanceof FavoriteRow)
 				{
-					((FavoriteRow)row).getHistory().setFavId(((FavoriteRow) row).getId());
+					((FavoriteRow) row).getHistory().setFavId(((FavoriteRow) row).getId());
 				}
 				list.add(row);
 				Log.d(TAG, row.toString());

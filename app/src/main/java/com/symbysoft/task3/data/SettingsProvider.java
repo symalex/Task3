@@ -9,13 +9,13 @@ import java.util.Set;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import org.json.JSONObject;
-
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
-import com.symbysoft.task3.network.YandexTranslateAPIData;
 import com.symbysoft.task3.network.YandexTranslateAPI;
 import com.symbysoft.task3.network.YandexTranslateAPI.YandexTranslateApiListener;
+import com.symbysoft.task3.network.YandexTranslateAPIData;
+
+import org.json.JSONObject;
 
 public class SettingsProvider implements YandexTranslateApiListener
 {
@@ -124,12 +124,9 @@ public class SettingsProvider implements YandexTranslateApiListener
 	@Override
 	public void onTranslationUpdate(YandexTranslateAPI api, String detected_lang, String detected_dir, String text)
 	{
-		if (mTranslateAPIData != null)
-		{
-			mTranslateAPIData.setDestText(text);
-			mTranslateAPIData.setDetectedDirection(detected_dir);
-			mTranslateAPIData.setDisableComparatorUpdateOnce(false);
-		}
+		mTranslateAPIData.setDestText(text);
+		mTranslateAPIData.setDetectedDirection(detected_dir);
+		mTranslateAPIData.setDisableComparatorUpdateOnce(false);
 	}
 
 	@Override

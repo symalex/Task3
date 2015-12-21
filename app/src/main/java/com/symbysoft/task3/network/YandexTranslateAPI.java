@@ -11,11 +11,10 @@ import android.util.Log;
 
 import com.squareup.okhttp.OkHttpClient;
 import com.symbysoft.task3.R;
-
-import com.symbysoft.task3.network.YandexTranslateAPIData.YandexApiResult;
-import com.symbysoft.task3.network.YandexTranslateAPIData.LangsData;
 import com.symbysoft.task3.network.YandexTranslateAPIData.LangDetectData;
+import com.symbysoft.task3.network.YandexTranslateAPIData.LangsData;
 import com.symbysoft.task3.network.YandexTranslateAPIData.TranslateData;
+import com.symbysoft.task3.network.YandexTranslateAPIData.YandexApiResult;
 
 import retrofit.Call;
 import retrofit.Callback;

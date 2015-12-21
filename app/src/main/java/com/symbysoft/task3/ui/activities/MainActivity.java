@@ -3,12 +3,11 @@ package com.symbysoft.task3.ui.activities;
 import java.util.Map;
 import java.util.Set;
 
-import android.app.ActionBar;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -22,28 +21,25 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
+
+import com.symbysoft.task3.MainApp;
+import com.symbysoft.task3.R;
+import com.symbysoft.task3.data.DataProvider;
+import com.symbysoft.task3.data.DataProvider.DataProviderListener;
+import com.symbysoft.task3.data.HistoryRow;
+import com.symbysoft.task3.network.InternetReceiver;
+import com.symbysoft.task3.network.InternetReceiver.InternetReceiverListener;
+import com.symbysoft.task3.network.YandexTranslateAPI;
+import com.symbysoft.task3.network.YandexTranslateAPI.YandexTranslateApiListener;
+import com.symbysoft.task3.ui.fragments.FavoriteFragment;
+import com.symbysoft.task3.ui.fragments.HistoryFragment;
+import com.symbysoft.task3.ui.fragments.MainFragment;
+import com.symbysoft.task3.ui.fragments.SettingsFragment;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-
-import com.symbysoft.task3.data.HistoryRow;
-import com.symbysoft.task3.ui.fragments.FavoriteFragment;
-import com.symbysoft.task3.ui.fragments.HistoryFragment;
-import com.symbysoft.task3.MainApp;
-import com.symbysoft.task3.ui.fragments.MainFragment;
-import com.symbysoft.task3.R;
-import com.symbysoft.task3.data.DataProvider;
-import com.symbysoft.task3.ui.fragments.SettingsFragment;
-import com.symbysoft.task3.network.InternetReceiver;
-import com.symbysoft.task3.network.InternetReceiver.InternetReceiverListener;
-import com.symbysoft.task3.data.DataProvider.DataProviderListener;
-import com.symbysoft.task3.network.YandexTranslateAPI;
-import com.symbysoft.task3.network.YandexTranslateAPI.YandexTranslateApiListener;
-
-import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 
 public class MainActivity extends AppCompatActivity implements OnNavigationItemSelectedListener, InternetReceiverListener, YandexTranslateApiListener, DataProviderListener
 {

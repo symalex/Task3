@@ -49,9 +49,7 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 
 	private DataProvider mDataProvider;
 
-	private final ItemTouchHelper.SimpleCallback mItemTouchCallback = new ItemTouchHelper.SimpleCallback(0,
-			ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT
-	)
+	private final ItemTouchHelper.SimpleCallback mItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT)
 	{
 		private CardView mRequestCardView;
 		private boolean mIsElevated;

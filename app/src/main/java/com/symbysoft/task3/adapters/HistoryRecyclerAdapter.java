@@ -2,8 +2,9 @@ package com.symbysoft.task3.adapters;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import android.app.Activity;
 import android.support.v7.widget.CardView;
@@ -12,28 +13,44 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.symbysoft.task3.R;
+import com.symbysoft.task3.common.helper;
 import com.symbysoft.task3.data.HistoryRow;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
-public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecyclerAdapter.ViewHolder>
+public class HistoryRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 {
 	private static final String TAG = "HistoryRecyclerAdapter";
 
 	private boolean isLongClick = false;
-	private int mSelectedPosition = -1;
+	private int mLastClickedPosition = -1;
+	private int mLastLongClickedPosition = -1;
+	private int mRequestDeletePosition = -1;
+	private int mRequestSavedDeletePosition = -1;
+	private Set<Integer> mSelections;
 	private Activity mActivity;
+	private RecyclerView mRecyclerView;
 	private ArrayList<HistoryRow> mList;
 	private HistoryRecyclerItemClickListener mOnItemClickListener;
+	private HistoryRecyclerItemActionListener mOnItemActionListener;
 
-	public int getSelectedPosition()
+	public interface HistoryRecyclerItemClickListener
 	{
-		return mSelectedPosition;
+		void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click);
+	}
+
+	public interface HistoryRecyclerItemActionListener
+	{
+		void onDoneDelete(HistoryRecyclerAdapter adapter, View view, int position);
+
+		void onCancelDelete(HistoryRecyclerAdapter adapter, View view, int position);
 	}
 
 	public ArrayList<HistoryRow> getList()
@@ -46,14 +63,19 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 		mList = list;
 	}
 
-	public void setSelectedPosition(int selectedPosition)
+	public boolean isLongClick()
 	{
-		mSelectedPosition = selectedPosition;
+		return isLongClick;
 	}
 
-	public interface HistoryRecyclerItemClickListener
+	public int getRequestDeletePosition()
 	{
-		void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click);
+		return mRequestDeletePosition;
+	}
+
+	public int getLastClickedPosition()
+	{
+		return mLastClickedPosition;
 	}
 
 	public void setOnItemClickListener(HistoryRecyclerItemClickListener listener)
@@ -61,7 +83,12 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 		mOnItemClickListener = listener;
 	}
 
-	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener
+	public void setOnItemActionListener(HistoryRecyclerItemActionListener onItemActionListener)
+	{
+		mOnItemActionListener = onItemActionListener;
+	}
+
+	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnLongClickListener
 	{
 		private LinearLayout mLayout;
 
@@ -80,8 +107,7 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 		{
 			super(view);
 			ButterKnife.bind(this, view);
-			mBtnFavorite.setOnClickListener(this);
-			mCardView.setOnClickListener(this);
+			//mBtnFavorite.setOnClickListener(this);
 			mCardView.setOnLongClickListener(this);
 		}
 
@@ -89,92 +115,238 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
 		public boolean onLongClick(View v)
 		{
 			isLongClick = true;
+			mLastLongClickedPosition = mLastClickedPosition = getAdapterPosition();
+			invertSelection(mLastLongClickedPosition);
+			Log.d(TAG, "LongClick: " + mLastLongClickedPosition);
+			if (mOnItemClickListener != null)
+			{
+				mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, getAdapterPosition(), getItemId(), isLongClick);
+			}
 			return false;
 		}
 
-		@Override
+		@OnClick(R.id.item_history_textview_favorite)
+		public void onFavoriteClick(View v)
+		{
+			if (mOnItemClickListener != null)
+			{
+				mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, getAdapterPosition(), getItemId(), isLongClick);
+			}
+			notifyDataSetChanged();
+		}
+
+		@OnClick(R.id.item_history_card_view)
 		public void onClick(View v)
 		{
-			switch (v.getId())
+			mLastClickedPosition = getAdapterPosition();
+			Log.d(TAG, "Click: " + String.valueOf(mLastClickedPosition));
+
+			if (!isEmptySelections())
 			{
-				case R.id.item_history_card_view:
-					if (isLongClick)
-					{
-						mSelectedPosition = getAdapterPosition();
-						Log.d(TAG, "Click: " + String.valueOf(getAdapterPosition()));
-					}
-					else
-					{
-						mSelectedPosition = -1;
-						Log.d(TAG, "Click: " + String.valueOf(getAdapterPosition()));
-					}
-					notifyDataSetChanged();
-					if (mOnItemClickListener != null)
-					{
-						mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, mSelectedPosition, getItemId(), isLongClick);
-					}
-					break;
-
-				case R.id.item_history_textview_favorite:
-					if (mOnItemClickListener != null)
-					{
-						mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, getAdapterPosition(), getItemId(), isLongClick);
-					}
-					notifyDataSetChanged();
-					break;
-			}
-
-			isLongClick = false;
-		}
-
-	}
-
-	public HistoryRecyclerAdapter(Activity activity, ArrayList<HistoryRow> list)
-	{
-		mActivity = activity;
-		mList = list;
-	}
-
-	@Override
-	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
-	{
-		return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false));
-	}
-
-	@Override
-	public void onBindViewHolder(ViewHolder holder, int position)
-	{
-		Log.d(TAG, "Draw on Click: " + String.valueOf(mSelectedPosition));
-
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP)
-		{
-
-		}
-		else
-		{
-			if (mSelectedPosition == position)
-			{
-				holder.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+				Log.d(TAG, "Click (invertSelection): " + mLastLongClickedPosition);
+				invertSelection(mLastClickedPosition);
 			}
 			else
 			{
-				holder.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.cardview_light_background));
+				notifyDataSetChanged();
+			}
+
+			if (mOnItemClickListener != null)
+			{
+				mOnItemClickListener.onItemClick(HistoryRecyclerAdapter.this, v, mLastClickedPosition, getItemId(), isLongClick);
+			}
+
+			isLongClick = false;
+			mLastLongClickedPosition = -1;
+		}
+
+	}
+
+	public class RequestViewHolder extends RecyclerView.ViewHolder
+	{
+		@Bind(R.id.item_request_done)
+		protected Button mBtnDone;
+		@Bind(R.id.item_request_undo)
+		protected Button mBtnUndo;
+
+		public RequestViewHolder(View view)
+		{
+			super(view);
+			ButterKnife.bind(this, view);
+		}
+
+		@OnClick(R.id.item_request_done)
+		public void onDoneClick(View v)
+		{
+			clearSelections();
+			if (mOnItemActionListener != null)
+			{
+				mOnItemActionListener.onDoneDelete(HistoryRecyclerAdapter.this, v, mRequestSavedDeletePosition);
 			}
 		}
 
-		HistoryRow hist_row = mList.get(position);
-		holder.mSrcTextView.setText(hist_row.getSource());
-		holder.mDestTextView.setText(hist_row.getDestination());
-		holder.mBtnFavorite.setText(hist_row.getDirection());
-		SimpleDateFormat dtf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
-		holder.mDateTimeTextView.setText(dtf.format(hist_row.getDt()));
-		if (hist_row.getFavId() != 0)
+		@OnClick(R.id.item_request_undo)
+		public void onUndoClick(View v)
 		{
-			holder.mBtnFavorite.setBackgroundResource(android.R.drawable.btn_star_big_on);
+			cancelDelete();
+			clearSelections();
+			if (mOnItemActionListener != null)
+			{
+				mOnItemActionListener.onCancelDelete(HistoryRecyclerAdapter.this, v, mRequestSavedDeletePosition);
+			}
+		}
+	}
+
+	public HistoryRecyclerAdapter(Activity activity, RecyclerView recyclerView, ArrayList<HistoryRow> list)
+	{
+		mActivity = activity;
+		mRecyclerView = recyclerView;
+		mList = list;
+		mSelections = new HashSet<>();
+	}
+
+	public void invertSelection(int position)
+	{
+		if (mSelections.contains(position))
+		{
+			mSelections.remove(position);
 		}
 		else
 		{
-			holder.mBtnFavorite.setBackgroundResource(android.R.drawable.btn_star_big_off);
+			mSelections.add(position);
+		}
+		//notifyItemChanged(position);
+		notifyDataSetChanged();
+	}
+
+	public void clearSelections()
+	{
+		mSelections.clear();
+		notifyDataSetChanged();
+	}
+
+	public boolean isEmptySelections()
+	{
+		return mSelections.size() == 0;
+	}
+
+	public boolean isGoSelection()
+	{
+		return mSelections.size() == 1;
+	}
+
+	public boolean isMultipleSelections()
+	{
+		return mSelections.size() > 1;
+	}
+
+	public Set<Integer> getSelections()
+	{
+		return mSelections;
+	}
+
+	public void requestDelete(int position)
+	{
+		if (position == -1)
+		{
+			position = mLastClickedPosition;
+		}
+		mRequestSavedDeletePosition = mRequestDeletePosition = position;
+		notifyItemChanged(position);
+	}
+
+	public void cancelDelete(boolean... removed)
+	{
+		if (removed.length > 0)
+		{
+			notifyItemRemoved(mRequestSavedDeletePosition);
+		}
+		else
+		{
+			notifyItemChanged(mRequestSavedDeletePosition);
+		}
+		mRequestDeletePosition = -1;
+	}
+
+	public void onItemMove(int source, int target)
+	{
+		mList.add(target, mList.remove(source));
+	}
+
+	@Override
+	public int getItemViewType(int position)
+	{
+		return mRequestDeletePosition == position ? 1 : 0;
+	}
+
+	@Override
+	public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+	{
+		RecyclerView.ViewHolder holder = null;
+
+		switch (viewType)
+		{
+			case 0:
+				holder = new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false));
+				break;
+
+			case 1:
+				holder = new RequestViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history_request, parent, false));
+				break;
+		}
+
+		return holder;
+	}
+
+	@Override
+	@SuppressWarnings("deprecation")
+	public void onBindViewHolder(RecyclerView.ViewHolder holder, int position)
+	{
+		ViewHolder vh = null;
+
+		if (holder instanceof ViewHolder)
+		{
+			vh = (ViewHolder) holder;
+		}
+
+		if (vh != null)
+		{
+			if (mSelections.contains(position))
+			{
+				vh.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+			}
+			else
+			{
+				vh.mCardView.setCardBackgroundColor(mActivity.getResources().getColor(R.color.cardview_light_background));
+			}
+
+			HistoryRow hist_row = mList.get(position);
+
+			String src_str, dst_str;
+			if (mLastClickedPosition != position)
+			{
+				src_str = helper.getOneLineText(hist_row.getSource(), 35);
+				dst_str = helper.getOneLineText(hist_row.getDestination(), 35);
+			}
+			else
+			{
+				src_str = hist_row.getSource();
+				dst_str = hist_row.getDestination();
+			}
+
+			vh.mSrcTextView.setText(src_str);
+			vh.mDestTextView.setText(dst_str);
+			vh.mBtnFavorite.setText(hist_row.getDirection());
+			SimpleDateFormat dtf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
+			vh.mDateTimeTextView.setText(dtf.format(hist_row.getDt()));
+			if (hist_row.getFavId() != 0)
+			{
+				vh.mBtnFavorite.setBackgroundResource(android.R.drawable.btn_star_big_on);
+			}
+			else
+			{
+				vh.mBtnFavorite.setBackgroundResource(android.R.drawable.btn_star_big_off);
+			}
 		}
 	}
 

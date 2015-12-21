@@ -9,34 +9,32 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.symbysoft.task3.data.DataProvider;
-import com.symbysoft.task3.data.SettingsProvider;
-import com.symbysoft.task3.ui.activities.MainActivity;
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
+import com.symbysoft.task3.data.DataProvider;
+import com.symbysoft.task3.data.SettingsProvider;
 import com.symbysoft.task3.network.YandexTranslateAPIData;
+import com.symbysoft.task3.ui.activities.MainActivity;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-
-import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 public class SettingsFragment extends Fragment implements OnCheckedChangeListener, OnItemSelectedListener
 {
@@ -239,7 +237,11 @@ public class SettingsFragment extends Fragment implements OnCheckedChangeListene
 
 		if (sources.length > 0 && !select_spinner_by_name(mSpinnerSourceLanguage, sources, mSettings.getTranslateAPIData().getLangs().get(YandexTranslateAPIData.src(direction))))
 		{
-			Snackbar.make(getView(), "Source Language not supported!", Snackbar.LENGTH_LONG).show();
+			View view = getView();
+			if (view != null)
+			{
+				Snackbar.make(view, "Source Language not supported!", Snackbar.LENGTH_LONG).show();
+			}
 			mSpinnerSourceLanguage.setSelection(0);
 		}
 	}
@@ -262,7 +264,11 @@ public class SettingsFragment extends Fragment implements OnCheckedChangeListene
 		String dst_name = mSettings.getTranslateAPIData().getLangs().get(YandexTranslateAPIData.dest(direction));
 		if (destinations.length > 0 && !select_spinner_by_name(mSpinnerResultLanguage, destinations, dst_name))
 		{
-			Snackbar.make(getView(), String.format("Destination Language: %s not supported!", dst_name), Snackbar.LENGTH_LONG).show();
+			View view = getView();
+			if (view != null)
+			{
+				Snackbar.make(view, String.format("Destination Language: %s not supported!", dst_name), Snackbar.LENGTH_LONG).show();
+			}
 			mSpinnerResultLanguage.setSelection(0);
 		}
 	}

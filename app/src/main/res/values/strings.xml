@@ -7,6 +7,7 @@
 	<string name="action_settings">Settings</string>
 	<string name="action_bookmark_history_item">Favorites</string>
 	<string name="action_delete_history_item">Delete</string>
+	<string name="action_clear_selection">Clear selection</string>
 
 	<!-- Yandex API -->
 	<string name="yandex_api_default_key">trnsl.1.1.20151126T092912Z.366a7389b1bb3869.ffe45722eda47f45e459a47a3a8048d68c844baa</string>

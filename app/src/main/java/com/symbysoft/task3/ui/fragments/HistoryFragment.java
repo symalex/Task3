@@ -2,13 +2,8 @@ package com.symbysoft.task3.ui.fragments;
 
 import java.util.List;
 
-import android.app.ActionBar;
-import android.os.Build;
-import android.os.Handler;
-
-import java.util.logging.LogRecord;
-
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,14 +15,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
+import android.widget.Toast;
 
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
 import com.symbysoft.task3.adapters.HistoryRecyclerAdapter;
+import com.symbysoft.task3.adapters.HistoryRecyclerAdapter.HistoryRecyclerItemClickListener;
 import com.symbysoft.task3.common.helper;
 import com.symbysoft.task3.data.DataProvider;
 import com.symbysoft.task3.data.FavoriteRow;
@@ -36,7 +29,9 @@ import com.symbysoft.task3.data.LocalDataBaseTask;
 import com.symbysoft.task3.data.LocalDataBaseTask.LocalDataBaseListener;
 import com.symbysoft.task3.ui.activities.MainActivity;
 
-import com.symbysoft.task3.adapters.HistoryRecyclerAdapter.HistoryRecyclerItemClickListener;
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
 
 //http://developer.android.com/intl/ru/training/material/lists-cards.html
 //http://code.tutsplus.com/tutorials/getting-started-with-recyclerview-and-cardview-on-android--cms-23465
@@ -135,10 +130,11 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	@Override
 	public void onItemClick(HistoryRecyclerAdapter adapter, View view, int position, long id, boolean is_long_click)
 	{
+		/*
 		if (mDataProvider != null)
 		{
 			mDataProvider.setHistorySelectedItemPosition(position);
-		}
+		}*/
 		switch (view.getId())
 		{
 			case R.id.item_history_card_view:
@@ -149,6 +145,17 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				if (mMenuItemDelete != null)
 				{
 					mMenuItemDelete.setVisible(true);
+				}
+				if (!is_long_click)
+				{
+					Snackbar.make(getActivity().findViewById(R.id.fragment_history_list_view), "I'm a Snackbar", Snackbar.LENGTH_LONG).setAction("Action", new View.OnClickListener()
+					{
+						@Override
+						public void onClick(View v)
+						{
+							Toast.makeText(getActivity(), "Snackbar Action", Toast.LENGTH_LONG).show();
+						}
+					}).show();
 				}
 				UpdateMenu();
 				break;
@@ -198,11 +205,11 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		UpdateMenu();
 	}
 
-	private void startAction(int action_id, int ... args)
+	private void startAction(int action_id, int... args)
 	{
 		HistoryRow hist_row;
 		int pos;
-		if( args.length>0 )
+		if (args.length > 0)
 		{
 			pos = args[0];
 		}

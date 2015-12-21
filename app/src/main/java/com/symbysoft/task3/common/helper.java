@@ -1,7 +1,5 @@
 package com.symbysoft.task3.common;
 
-import android.util.Log;
-
 public class helper
 {
 	public static String getMethodName(Object o, final int depth, String... args)
@@ -17,5 +15,32 @@ public class helper
 			ret += s;
 		}
 		return ret;
+	}
+
+	public static String getOneLineText(String text, int max)
+	{
+		String str = "";
+		char ch_prev = ' ';
+		for (int i = 0; i < text.length(); i++)
+		{
+			if (i > max)
+			{
+				str += " ...";
+				break;
+			}
+			char ch = text.charAt(i);
+			switch (ch)
+			{
+				case '\n':
+					ch = ' ';
+					break;
+			}
+			if (ch_prev != ch || ch != ' ')
+			{
+				str += ch;
+			}
+			ch_prev = ch;
+		}
+		return str;
 	}
 }

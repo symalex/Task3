@@ -9,9 +9,17 @@
 		app:showAsAction="ifRoom" />
 
 	<item
-		android:id="@+id/favorite_menu_action_delete"
+		android:id="@+id/favorite_menu_action_clear_selection"
 		android:icon="@android:drawable/ic_delete"
 		android:orderInCategory="100"
-		android:title="@string/action_delete_history_item" />
+		android:title="@string/action_clear_selection"
+		app:showAsAction="ifRoom" />
+
+	<item
+		android:id="@+id/favorite_menu_action_delete"
+		android:icon="@android:drawable/ic_menu_delete"
+		android:orderInCategory="100"
+		android:title="@string/action_delete_history_item"
+		app:showAsAction="ifRoom" />
 
 </menu>

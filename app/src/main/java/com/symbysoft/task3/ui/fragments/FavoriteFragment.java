@@ -2,9 +2,13 @@ package com.symbysoft.task3.ui.fragments;
 
 import java.util.List;
 
+import android.graphics.Canvas;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v4.view.ViewCompat;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -13,17 +17,13 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
 
 import com.symbysoft.task3.MainApp;
 import com.symbysoft.task3.R;
 import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter;
+import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter.FavoriteRecyclerItemClickListener;
 import com.symbysoft.task3.common.helper;
 import com.symbysoft.task3.data.DataProvider;
 import com.symbysoft.task3.data.FavoriteRow;
@@ -32,42 +32,134 @@ import com.symbysoft.task3.data.LocalDataBaseTask;
 import com.symbysoft.task3.data.LocalDataBaseTask.LocalDataBaseListener;
 import com.symbysoft.task3.ui.activities.MainActivity;
 
-import com.symbysoft.task3.adapters.FavoriteRecyclerAdapter.FavoriteRecyclerItemClickListener;
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
 
-public class FavoriteFragment extends Fragment implements LocalDataBaseListener, FavoriteRecyclerItemClickListener
+public class FavoriteFragment extends Fragment implements LocalDataBaseListener, FavoriteRecyclerItemClickListener, FavoriteRecyclerAdapter.FavoriteRecyclerItemActionListener
 {
 	public static final String TAG = "FavoriteFragment";
 	public static final String FTAG = "favorite_fragment";
 
-	@Bind(R.id.fragment_history_list_view)
+	@Bind(R.id.fragment_favorite_list_view)
 	protected RecyclerView mRecyclerView;
 	private RecyclerView.LayoutManager mLayoutManager;
 	private FavoriteRecyclerAdapter mAdapter;
 	private Menu mMenu;
+	private Snackbar mSnackbar;
 
 	private DataProvider mDataProvider;
 
-	private final ItemTouchHelper.SimpleCallback mItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT)
+	private final ItemTouchHelper.SimpleCallback mItemTouchCallback = new ItemTouchHelper.SimpleCallback(0,
+			ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT
+	)
 	{
+		private CardView mRequestCardView;
+		private boolean mIsElevated;
+
 		@Override
-		public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target)
+		public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive)
 		{
-			return false;
+			super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+
+			if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP && isCurrentlyActive && !mIsElevated)
+			{
+				//final float newElevation = 5f + ViewCompat.getElevation(viewHolder.itemView);
+				//ViewCompat.setElevation(viewHolder.itemView, newElevation);
+				mIsElevated = true;
+			}
+			else
+			{
+				if (viewHolder instanceof FavoriteRecyclerAdapter.ViewHolder)
+				{
+					FavoriteRecyclerAdapter.ViewHolder holder = (FavoriteRecyclerAdapter.ViewHolder) viewHolder;
+					CardView card = (CardView) holder.itemView;
+				}
+			}
+		}
+
+		@Override
+		public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder)
+		{
+			super.clearView(recyclerView, viewHolder);
+
+			if (viewHolder instanceof FavoriteRecyclerAdapter.ViewHolder)
+			{
+				FavoriteRecyclerAdapter.ViewHolder holder = (FavoriteRecyclerAdapter.ViewHolder) viewHolder;
+				CardView card = (CardView) holder.itemView;
+			}
+
+			mIsElevated = false;
+		}
+
+		@Override
+		public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target)
+		{
+			if (source.getItemViewType() != target.getItemViewType())
+			{
+				return false;
+			}
+
+			mAdapter.onItemMove(source.getAdapterPosition(), target.getAdapterPosition());
+			return true;
 		}
 
 		@Override
 		public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir)
 		{
-			if (mAdapter != null)
-			{
-				mAdapter.setSelectedPosition(viewHolder.getAdapterPosition());
-			}
+			int pos = viewHolder.getAdapterPosition();
 			switch (swipeDir)
 			{
 				case ItemTouchHelper.LEFT:
 				case ItemTouchHelper.RIGHT:
-					Log.d(TAG, "Delete item");
-					startAction(R.id.favorite_menu_action_delete);
+					Log.d(TAG, "Request delete item: " + pos);
+					if (mAdapter != null)
+					{
+						if (mAdapter.isEmptySelections() || mAdapter.isGoSelection())
+						{
+							mAdapter.requestDelete(pos);
+						}
+						else
+						{
+							if (!mAdapter.getSelections().contains(pos))
+							{
+								mAdapter.invertSelection(pos);
+							}
+							mAdapter.notifyDataSetChanged();
+
+							mSnackbar = Snackbar.make(getActivity().findViewById(R.id.fragment_favorite_list_view), "Remove selected items?", Snackbar.LENGTH_INDEFINITE)
+									.setCallback(new Snackbar.Callback()
+									{
+										@Override
+										public void onDismissed(Snackbar snackbar, int event)
+										{
+											switch (event)
+											{
+												case Snackbar.Callback.DISMISS_EVENT_SWIPE:
+												case Snackbar.Callback.DISMISS_EVENT_ACTION:
+												case Snackbar.Callback.DISMISS_EVENT_TIMEOUT:
+													mSnackbar = null;
+													if (mAdapter != null)
+													{
+														mAdapter.notifyDataSetChanged();
+													}
+													updateMenu();
+													break;
+											}
+										}
+									}).setAction("Remove", new View.OnClickListener()
+									{
+										@Override
+										public void onClick(View v)
+										{
+											mSnackbar = null;
+											startAction(R.id.favorite_menu_action_delete);
+											updateMenu();
+										}
+									});
+							mSnackbar.show();
+						}
+					}
 					break;
 			}
 		}
@@ -100,13 +192,13 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		RecyclerView.ItemAnimator itemAnimator = new SlideInUpAnimator();
 		mRecyclerView.setItemAnimator(itemAnimator);
 
-		// specify an adapter (see also next example)
-		mAdapter = new FavoriteRecyclerAdapter(getActivity(), mDataProvider.getFavoriteList());
+		// specify an adapter
+		mAdapter = new FavoriteRecyclerAdapter(getActivity(), mRecyclerView, mDataProvider.getFavoriteList());
 		mAdapter.setOnItemClickListener(this);
+		mAdapter.setOnItemActionListener(this);
 		mRecyclerView.setAdapter(mAdapter);
 		mItemTouchHelper.attachToRecyclerView(mRecyclerView);
-
-		mAdapter.setSelectedPosition(mDataProvider.getFavoriteSelectedItemPosition());
+		//mRecyclerView.addOnItemTouchListener(this);
 
 		setHasOptionsMenu(true);
 
@@ -128,25 +220,34 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		switch (view.getId())
 		{
 			case R.id.item_history_card_view:
-
-				if (mDataProvider != null)
-				{
-					mDataProvider.setFavoriteSelectedItemPosition(position);
-				}
-				UpdateMenu();
+				updateMenu();
 				break;
 		}
 	}
 
-	private void UpdateMenu()
+	@Override
+	public void onDoneDelete(FavoriteRecyclerAdapter adapter, View view, int position)
+	{
+		startAction(R.id.favorite_menu_action_delete);
+		updateMenu();
+	}
+
+	@Override
+	public void onCancelDelete(FavoriteRecyclerAdapter adapter, View view, int position)
+	{
+		updateMenu();
+	}
+
+	private void updateMenu()
 	{
 		if (mMenu != null)
 		{
 			mMenu.findItem(R.id.action_settings).setVisible(false);
 			if (mAdapter != null)
 			{
-				mMenu.findItem(R.id.favorite_menu_action_go).setVisible(mAdapter.getSelectedPosition() != -1);
-				mMenu.findItem(R.id.favorite_menu_action_delete).setVisible(mAdapter.getSelectedPosition() != -1);
+				mMenu.findItem(R.id.favorite_menu_action_go).setVisible(mAdapter.isGoSelection());
+				mMenu.findItem(R.id.favorite_menu_action_clear_selection).setVisible(!mAdapter.isEmptySelections());
+				mMenu.findItem(R.id.favorite_menu_action_delete).setVisible(!mAdapter.isEmptySelections());
 			}
 		}
 	}
@@ -158,13 +259,21 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		mMenu = menu;
 
 		inflater.inflate(R.menu.favorite_menu, menu);
-		UpdateMenu();
+		updateMenu();
 	}
 
 	private void startAction(int action_id)
 	{
 		FavoriteRow fav_row;
-		int pos = mAdapter != null ? mAdapter.getSelectedPosition() : -1;
+		int pos = -1;
+		if (mAdapter != null)
+		{
+			if (!mAdapter.isEmptySelections())
+			{
+				Object[] arr = mAdapter.getSelections().toArray();
+				pos = (int) arr[0];
+			}
+		}
 		switch (action_id)
 		{
 			case R.id.favorite_menu_action_go:
@@ -176,13 +285,29 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 				break;
 
 			case R.id.favorite_menu_action_delete:
-				if (pos >= 0 && pos < mDataProvider.getFavoriteList().size())
+				if (mAdapter != null)
 				{
-					fav_row = mDataProvider.getFavoriteList().get(pos);
-					mDataProvider.getLocalDataBase().delFromFavorite(fav_row.getId());
-					if (mAdapter != null)
+					pos = mAdapter.getRequestDeletePosition();
+					if (pos >= 0 && pos < mDataProvider.getFavoriteList().size())
 					{
-						mAdapter.notifyItemRemoved(pos);
+						fav_row = mDataProvider.getFavoriteList().get(pos);
+						mDataProvider.getLocalDataBase().delFromFavorite(fav_row.getId());
+						mAdapter.cancelDelete(true);
+					}
+					else
+					{
+						if (!mAdapter.isEmptySelections())
+						{
+							// delete multiple selections
+							for (int p : mAdapter.getSelections())
+							{
+								fav_row = mDataProvider.getFavoriteList().get(p);
+								mDataProvider.getLocalDataBase().delFromFavorite(fav_row.getId());
+							}
+							mAdapter.cancelDelete(true);
+							mAdapter.clearSelections();
+							updateMenu();
+						}
 					}
 				}
 				break;
@@ -197,6 +322,16 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 			case R.id.favorite_menu_action_go:
 			case R.id.favorite_menu_action_delete:
 				startAction(item.getItemId());
+				return true;
+
+			case R.id.favorite_menu_action_clear_selection:
+				if (mAdapter != null)
+				{
+					mAdapter.clearSelections();
+					mAdapter.notifyDataSetChanged();
+					updateMenu();
+
+				}
 				return true;
 
 			default:
@@ -222,7 +357,11 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		{
 			mDataProvider.getLocalDataBase().removeListener(this);
 		}
-
+		if (mSnackbar != null)
+		{
+			mSnackbar.dismiss();
+			mSnackbar = null;
+		}
 		super.onStop();
 	}
 
@@ -262,4 +401,5 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	{
 		Log.d(TAG, helper.getMethodName(this, 0));
 	}
+
 }

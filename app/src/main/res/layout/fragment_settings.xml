@@ -9,10 +9,17 @@
 		android:layout_height="wrap_content"
 		android:text="Translate API key" />
 
-	<EditText
-		android:id="@+id/fragment_settings_api_key"
+	<android.support.design.widget.TextInputLayout
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content" />
+		android:layout_height="wrap_content">
+
+		<EditText
+			android:id="@+id/fragment_settings_api_key"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:hint="Yandex API key (https://tech.yandex.com/translate/)" />
+
+	</android.support.design.widget.TextInputLayout>
 
 	<CheckBox
 		android:id="@+id/fragment_settings_autodetect"

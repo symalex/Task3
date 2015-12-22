@@ -444,6 +444,13 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		if (mDataProvider != null)
 		{
 			mDataProvider.getLocalDataBase().addListener(this);
+			if (mAdapter != null)
+			{
+				mAdapter.getSelections().clear();
+				mAdapter.getSelections().addAll(mDataProvider.getHistorySelections());
+				updateList();
+				updateMenu();
+			}
 		}
 	}
 
@@ -454,6 +461,8 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 
 		if (mDataProvider != null)
 		{
+			mDataProvider.getHistorySelections().clear();
+			mDataProvider.getHistorySelections().addAll(mAdapter.getSelections());
 			mDataProvider.getLocalDataBase().removeListener(this);
 		}
 

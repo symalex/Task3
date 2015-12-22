@@ -379,6 +379,13 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		if (mDataProvider != null)
 		{
 			mDataProvider.getLocalDataBase().addListener(this);
+			if (mAdapter != null)
+			{
+				mAdapter.getSelections().clear();
+				mAdapter.getSelections().addAll(mDataProvider.getFavoriteSelections());
+				updateList();
+				updateMenu();
+			}
 		}
 	}
 
@@ -387,6 +394,8 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	{
 		if (mDataProvider != null)
 		{
+			mDataProvider.getFavoriteSelections().clear();
+			mDataProvider.getFavoriteSelections().addAll(mAdapter.getSelections());
 			mDataProvider.getLocalDataBase().removeListener(this);
 		}
 		if (mSnackbar != null)

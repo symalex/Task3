@@ -2,8 +2,10 @@ package com.symbysoft.task3.data;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import android.content.Context;
 import android.content.IntentFilter;
@@ -30,8 +32,8 @@ public class DataProvider implements LocalDataBaseListener
 	private YandexTranslateAPI mTranslateAPI;
 	private LocalDataBase mLocalDataBase;
 	private final LinkedHashSet<DataProviderListener> mListeners;
-	private int mHistorySelectedItemPosition = -1;
-	private int mFavoriteSelectedItemPosition = -1;
+	private Set<Integer> mHistorySelections;
+	private Set<Integer> mFavoriteSelections;
 	private boolean mForceTextTranslateFlag = false;
 
 	public interface DataProviderListener
@@ -92,26 +94,26 @@ public class DataProvider implements LocalDataBaseListener
 		return mLocalDataBase;
 	}
 
-	public int getHistorySelectedItemPosition()
+	public Set<Integer> getHistorySelections()
 	{
-		return mHistorySelectedItemPosition;
+		return mHistorySelections;
 	}
 
-	public void setHistorySelectedItemPosition(int historySelectedItemPosition)
+	public void setHistorySelections(Set<Integer> historySelections)
 	{
-		mHistorySelectedItemPosition = historySelectedItemPosition;
+		mHistorySelections = historySelections;
 	}
 
-	public int getFavoriteSelectedItemPosition()
+	public Set<Integer> getFavoriteSelections()
 	{
-		return mFavoriteSelectedItemPosition;
+		return mFavoriteSelections;
 	}
 
-	public void setFavoriteSelectedItemPosition(int favoriteSelectedItemPosition)
+	public void setFavoriteSelections(Set<Integer> favoriteSelections)
 	{
-		mFavoriteSelectedItemPosition = favoriteSelectedItemPosition;
+		mFavoriteSelections = favoriteSelections;
 	}
-
+	
 	public boolean isForceTextTranslateFlag()
 	{
 		return mForceTextTranslateFlag;
@@ -127,7 +129,9 @@ public class DataProvider implements LocalDataBaseListener
 		mCtx = ctx;
 		mListeners = new LinkedHashSet<>();
 		mHistoryList = new ArrayList<>();
+		mHistorySelections = new HashSet<>();
 		mFavoriteList = new ArrayList<>();
+		mFavoriteSelections = new HashSet<>();
 	}
 
 	public static DataProvider getInstance(Context ctx)

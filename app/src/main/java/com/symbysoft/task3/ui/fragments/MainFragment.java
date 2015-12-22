@@ -3,6 +3,11 @@ package com.symbysoft.task3.ui.fragments;
 import java.util.Map;
 import java.util.Set;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -11,6 +16,9 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -48,6 +56,8 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 	protected TextView mTextViewBottomTextInfo;
 	@Bind(R.id.content_main_edit_text_bottom)
 	protected EditText mEditTextBottom;
+	@Bind(R.id.fragment_main_yandex_text_ref)
+	protected TextView mYandexRef;
 
 	// set from MainActivity
 	private FloatingActionButton mBtnTranslate;
@@ -60,6 +70,9 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 	private InternetReceiver mReceiver;
 	private DataProvider mDataProvider;
 	private YandexTranslateAPIData mAPIData;
+	private Menu mMenu;
+	private ClipboardManager mClipboard;
+
 	private final Handler mHandler = new Handler();
 
 	public void setBtnTranslate(FloatingActionButton btnTranslate)
@@ -117,6 +130,7 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 					}
 				}
 				updateTranslateButtonHistoryAccess();
+				updateMenu();
 			}
 			else
 			{
@@ -164,6 +178,7 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 		View view = inflater.inflate(R.layout.fragment_main, container, false);
 		ButterKnife.bind(this, view);
 
+		mClipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
 		mDataProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
 		mAPIData = mDataProvider.getSettings().getTranslateAPIData();
 		mReceiver = mDataProvider.getInternetReceiver();
@@ -178,7 +193,87 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 
 		onInternetConnectionChange(mReceiver);
 
+		setHasOptionsMenu(true);
+
+		mYandexRef.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				String url = getResources().getString(R.string.yandex_translate_api_url);
+				Intent browser = new Intent(Intent.ACTION_VIEW);
+				browser.setData(Uri.parse(url));
+				startActivity(browser);
+			}
+		});
+
 		return view;
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+	{
+		super.onCreateOptionsMenu(menu, inflater);
+		inflater.inflate(R.menu.clipboard_menu, menu);
+
+		mMenu = menu;
+		updateMenu();
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch (item.getItemId())
+		{
+			case R.id.action_clear_text:
+				if (mEditTextTop != null)
+				{
+					mEditTextTop.setText("");
+				}
+				return true;
+
+			case R.id.action_clipboard_copy:
+				if (mEditTextTop != null)
+				{
+					ClipData clip = ClipData.newPlainText("label", mEditTextTop.getText());
+					mClipboard.setPrimaryClip(clip);
+				}
+				return true;
+
+			case R.id.action_clipboard_copy_translation:
+				if (mEditTextBottom != null)
+				{
+					ClipData clip = ClipData.newPlainText("label", mEditTextBottom.getText());
+					mClipboard.setPrimaryClip(clip);
+				}
+				return true;
+
+			case R.id.action_clipboard_paste:
+				if (mEditTextTop != null)
+				{
+					if (mClipboard.hasPrimaryClip())
+					{
+						ClipData.Item cdata = mClipboard.getPrimaryClip().getItemAt(0);
+						mEditTextTop.setText(cdata.getText());
+					}
+				}
+				return true;
+
+
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
+
+	private void updateMenu()
+	{
+		if (mMenu != null && mClipboard != null && mEditTextTop != null && mEditTextBottom != null)
+		{
+			mMenu.findItem(R.id.action_clear_text).setVisible(mEditTextTop.getText().toString().trim().length() > 0);
+			mMenu.findItem(R.id.action_clipboard_copy).setVisible(mEditTextTop.getText().toString().trim().length() > 0);
+			mMenu.findItem(R.id.action_clipboard_copy_translation).setVisible(mEditTextBottom.getText().toString().trim().length() > 0);
+			mMenu.findItem(R.id.action_clipboard_paste).setVisible(mClipboard.hasPrimaryClip());
+		}
 	}
 
 	@Override
@@ -281,6 +376,7 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 		setBottomText(mAPIData.getDestText());
 		updateTextComparators();
 		updateTranslateButtonHistoryAccess();
+		updateMenu();
 	}
 
 	private void updateInfoTexts()
@@ -296,6 +392,7 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 		{
 			onInternetConnectionChange(mReceiver);
 		}
+		updateMenu();
 	}
 
 	private boolean isTopTextChanged()
@@ -321,7 +418,11 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 			mAPIData.setRequiredSaveHistory(false);
 
 			// save history data
-			mDataProvider.getLocalDataBase().addToHistory(mDataProvider.getTranslateAPI().getTranslateDirection(), src_text, dest_text);
+			mDataProvider.getLocalDataBase().addToHistory(
+					mDataProvider.getTranslateAPI().getTranslateDirection(),
+					src_text, dest_text,
+					mDataProvider.getTranslateAPI().getDetectedDirection()
+			);
 			mAPIData.setCurrentTextInHistory(true);
 		}
 		updateTranslateButtonHistoryAccess();

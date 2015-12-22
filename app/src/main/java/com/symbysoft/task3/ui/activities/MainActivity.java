@@ -217,9 +217,13 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 
 	public void gotoMainAndSetData(HistoryRow row)
 	{
-		mDataProvider.getSettings().getTranslateAPIData().setTranslateDirection(row.getDirection());
-		mDataProvider.getSettings().getTranslateAPIData().setSrcText(row.getSource());
-		mDataProvider.getSettings().getTranslateAPIData().setDestText(row.getDestination());
+		if (mDataProvider != null)
+		{
+			mDataProvider.getSettings().getTranslateAPIData().setTranslateDirection(row.getDirection());
+			mDataProvider.getSettings().getTranslateAPIData().setSrcText(row.getSource());
+			mDataProvider.getSettings().getTranslateAPIData().setDestText(row.getDestination());
+			mDataProvider.getSettings().getTranslateAPIData().setDetectedDirection(row.getDetDirection());
+		}
 		navigateFragment(MainActivity.FragmentPage.MAIN_FRAGMENT);
 	}
 
@@ -338,7 +342,6 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
@@ -346,19 +349,15 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-
-		//noinspection SimplifiableIfStatement
-		if (id == R.id.action_settings)
+		switch (item.getItemId())
 		{
-			doMenuSettings();
-			return true;
-		}
+			case R.id.action_settings:
+				doMenuSettings();
+				return true;
 
-		return super.onOptionsItemSelected(item);
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
 	@SuppressWarnings("StatementWithEmptyBody")

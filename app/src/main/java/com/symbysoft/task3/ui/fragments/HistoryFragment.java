@@ -2,6 +2,9 @@ package com.symbysoft.task3.ui.fragments;
 
 import java.util.List;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.os.Bundle;
@@ -53,6 +56,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	private HistoryRecyclerAdapter mAdapter;
 	private Menu mMenu;
 	private Snackbar mSnackbar;
+	private ClipboardManager mClipboard;
 
 	private MenuItem mMenuItemFavorite;
 	private MenuItem mMenuItemDelete;
@@ -136,6 +140,8 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 	{
 		View view = inflater.inflate(R.layout.fragment_history, container, false);
 		ButterKnife.bind(this, view);
+
+		mClipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
 
 		mDataProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
 		mDataProvider.getLocalDataBase().addListener(this);
@@ -270,6 +276,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				mMenu.findItem(R.id.history_menu_action_go).setVisible(mAdapter.isGoSelection());
 				mMenu.findItem(R.id.history_menu_action_bookmark).setVisible(!mAdapter.isEmptySelections());
 				mMenu.findItem(R.id.history_menu_action_clear_selection).setVisible(!mAdapter.isEmptySelections());
+				mMenu.findItem(R.id.action_clipboard_copy).setVisible(!mAdapter.isEmptySelections());
 				mMenu.findItem(R.id.history_menu_action_delete).setVisible(!mAdapter.isEmptySelections());
 			}
 		}
@@ -329,6 +336,23 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				}
 				break;
 
+			case R.id.action_clipboard_copy:
+				StringBuffer buf = new StringBuffer();
+				for (int p : mAdapter.getSelections())
+				{
+					hist_row = mDataProvider.getHistoryList().get(p);
+					buf.append("[ ")
+							.append(hist_row.getDetDirection())
+							.append(" ]\n")
+							.append(hist_row.getSource())
+							.append("\n-\n")
+							.append(hist_row.getDestination())
+							.append("\n\n");
+				}
+				ClipData clip = ClipData.newPlainText("label", buf);
+				mClipboard.setPrimaryClip(clip);
+				break;
+
 			case R.id.history_menu_action_bookmark:
 				if (mAdapter != null)
 				{
@@ -384,6 +408,7 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 		{
 			case R.id.history_menu_action_go:
 			case R.id.history_menu_action_bookmark:
+			case R.id.action_clipboard_copy:
 				startAction(item.getItemId());
 				return true;
 

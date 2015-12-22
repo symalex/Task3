@@ -92,13 +92,14 @@ public class LocalDataBaseTask extends AsyncTask<Void, Integer, Object>
 		execute();
 	}
 
-	public void addToHistory(String direction, String src_text, String dest_text)
+	public void addToHistory(String direction, String src_text, String dest_text, String detected_direction)
 	{
 		mAction = LocalDataBaseAction.DB_ACTION_ADD_HISTORY;
 		mValues.clear();
 		mValues.put(HistoryRow.DIRECTION, direction);
 		mValues.put(HistoryRow.SOURCE, src_text);
 		mValues.put(HistoryRow.DEST, dest_text);
+		mValues.put(HistoryRow.DET_DIRECTION, detected_direction);
 		execute();
 	}
 
@@ -204,6 +205,7 @@ public class LocalDataBaseTask extends AsyncTask<Void, Integer, Object>
 					r.setDirection(mValues.getAsString(HistoryRow.DIRECTION));
 					r.setSource(mValues.getAsString(HistoryRow.SOURCE));
 					r.setDestination(mValues.getAsString(HistoryRow.DEST));
+					r.setDetDirection(mValues.getAsString(HistoryRow.DET_DIRECTION));
 					r.now();
 					mDbHelper.getHistoryDAO().create(r);
 					ret = r;

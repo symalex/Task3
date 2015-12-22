@@ -4,11 +4,6 @@
 	android:layout_height="match_parent"
 	android:orientation="vertical">
 
-	<TextView
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:text="Translate API key" />
-
 	<android.support.design.widget.TextInputLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content">
@@ -17,7 +12,7 @@
 			android:id="@+id/fragment_settings_api_key"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:hint="Yandex API key (https://tech.yandex.com/translate/)" />
+			android:hint="Translate API key (https://tech.yandex.com/translate/)" />
 
 	</android.support.design.widget.TextInputLayout>
 

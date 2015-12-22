@@ -59,6 +59,10 @@ public class SettingsProvider implements YandexTranslateApiListener
 		((MainApp) mCtx).getDataProvider().getTranslateAPI().addApiListener(this);
 
 		mTranslateAPIData.setApiKey(mPref.getString(YANDEX_API_KEY_TEXT, mCtx.getResources().getString(R.string.yandex_api_default_key)));
+		if (mTranslateAPIData.getApiKey().trim().length() == 0)
+		{
+			mTranslateAPIData.setApiKey(mCtx.getResources().getString(R.string.yandex_api_default_key));
+		}
 		mTranslateAPIData.setTranslateDirection(mPref.getString(YANDEX_API_TRANSLATE_DIRECTION, YandexTranslateAPIData.DEFAULT_DEST_VALUE));
 
 		// read directions

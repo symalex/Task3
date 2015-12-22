@@ -139,7 +139,12 @@ public class LocalDataBase implements LocalDataBaseListener
 					cancelTask(mTask);
 					mTask = new LocalDataBaseTask(mDbHelper);
 					mTask.setListener(this);
-					mTask.addToHistory((String) cv.get(HistoryRow.DIRECTION), (String) cv.get(HistoryRow.SOURCE), (String) cv.get(HistoryRow.DEST));
+					mTask.addToHistory(
+							(String) cv.get(HistoryRow.DIRECTION),
+							(String) cv.get(HistoryRow.SOURCE),
+							(String) cv.get(HistoryRow.DEST),
+							(String) cv.get(HistoryRow.DET_DIRECTION)
+					);
 					break;
 
 				case RA_DEL_HISTORY:
@@ -182,13 +187,14 @@ public class LocalDataBase implements LocalDataBaseListener
 		startNextAction(cv);
 	}
 
-	public void addToHistory(String direction, String src_text, String dest_text)
+	public void addToHistory(String direction, String src_text, String dest_text, String detected_direction)
 	{
 		ContentValues cv = new ContentValues();
 		cv.put(ASYNC_ACTION, RuningAction.RA_ADD_HISTORY.ordinal());
 		cv.put(HistoryRow.DIRECTION, direction);
 		cv.put(HistoryRow.SOURCE, src_text);
 		cv.put(HistoryRow.DEST, dest_text);
+		cv.put(HistoryRow.DET_DIRECTION, detected_direction);
 		startNextAction(cv);
 	}
 

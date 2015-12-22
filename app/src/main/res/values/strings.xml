@@ -5,10 +5,16 @@
 	<string name="navigation_drawer_close">Close navigation drawer</string>
 
 	<string name="action_settings">Settings</string>
+	<string name="action_clear_text">Clear</string>
+	<string name="action_clipboard_copy">Copy</string>
+	<string name="action_clipboard_copy_translation">Copy translation</string>
+	<string name="action_clipboard_paste">Paste</string>
 	<string name="action_bookmark_history_item">Favorites</string>
 	<string name="action_delete_history_item">Delete</string>
 	<string name="action_clear_selection">Clear selection</string>
 
+	<string name="yandex_translate_api_ref">Переведено <a href="http://translate.yandex.ru/">«Яндекс.Переводчиком»</a></string>
+	<string name="yandex_translate_api_url">http://translate.yandex.ru/</string>
 	<!-- Yandex API -->
 	<string name="yandex_api_default_key">trnsl.1.1.20151126T092912Z.366a7389b1bb3869.ffe45722eda47f45e459a47a3a8048d68c844baa</string>
 	<string name="yandex_api_base_host_url">https://translate.yandex.net</string>

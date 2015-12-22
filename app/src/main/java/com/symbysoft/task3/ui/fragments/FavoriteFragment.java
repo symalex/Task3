@@ -2,6 +2,9 @@ package com.symbysoft.task3.ui.fragments;
 
 import java.util.List;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.os.Bundle;
@@ -46,6 +49,7 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	private FavoriteRecyclerAdapter mAdapter;
 	private Menu mMenu;
 	private Snackbar mSnackbar;
+	private ClipboardManager mClipboard;
 
 	private DataProvider mDataProvider;
 
@@ -125,6 +129,8 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 	{
 		View view = inflater.inflate(R.layout.fragment_favorite, container, false);
 		ButterKnife.bind(this, view);
+
+		mClipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
 
 		mDataProvider = ((MainApp) getContext().getApplicationContext()).getDataProvider();
 		mDataProvider.getLocalDataBase().addListener(this);
@@ -248,6 +254,7 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 			{
 				mMenu.findItem(R.id.favorite_menu_action_go).setVisible(mAdapter.isGoSelection());
 				mMenu.findItem(R.id.favorite_menu_action_clear_selection).setVisible(!mAdapter.isEmptySelections());
+				mMenu.findItem(R.id.action_clipboard_copy).setVisible(!mAdapter.isEmptySelections());
 				mMenu.findItem(R.id.favorite_menu_action_delete).setVisible(!mAdapter.isEmptySelections());
 			}
 		}
@@ -283,6 +290,23 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 					fav_row = mDataProvider.getFavoriteList().get(pos);
 					((MainActivity) getActivity()).gotoMainAndSetData(fav_row.getHistory());
 				}
+				break;
+
+			case R.id.action_clipboard_copy:
+				StringBuilder buf = new StringBuilder();
+				for (int p : mAdapter.getSelections())
+				{
+					fav_row = mDataProvider.getFavoriteList().get(p);
+					buf.append("[ ")
+							.append(fav_row.getHistory().getDetDirection())
+							.append(" ]\n")
+							.append(fav_row.getHistory().getSource())
+							.append("\n-\n")
+							.append(fav_row.getHistory().getDestination())
+							.append("\n\n");
+				}
+				ClipData clip = ClipData.newPlainText("label", buf);
+				mClipboard.setPrimaryClip(clip);
 				break;
 
 			case R.id.favorite_menu_action_delete:
@@ -321,6 +345,7 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 		switch (item.getItemId())
 		{
 			case R.id.favorite_menu_action_go:
+			case R.id.action_clipboard_copy:
 				startAction(item.getItemId());
 				return true;
 

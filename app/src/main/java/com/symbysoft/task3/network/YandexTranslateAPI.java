@@ -27,6 +27,7 @@ public class YandexTranslateAPI
 {
 	private String mApiKey;
 	private String mTranslateDirection = "ru"; // example: ru, en-ru;
+	private String mDetectedDirection = "";
 	private String mUiLang = "ru";
 	private String mBaseUrl = "";
 	private String mLastSourceText = "";
@@ -77,6 +78,16 @@ public class YandexTranslateAPI
 	public String getLastResultText()
 	{
 		return mLastResultText;
+	}
+
+	public String getDetectedDirection()
+	{
+		return mDetectedDirection;
+	}
+
+	public void setDetectedDirection(String detectedDirection)
+	{
+		mDetectedDirection = detectedDirection;
 	}
 
 	public enum YandexTranslateApiAction
@@ -171,6 +182,7 @@ public class YandexTranslateAPI
 	public void onTranslationUpdate(YandexTranslateAPI api, String detected_lang, String detected_dir, String text)
 	{
 		mLastResultText = text;
+		mDetectedDirection = detected_dir;
 		for (YandexTranslateApiListener listener : mListeners)
 		{
 			if (listener != null)
@@ -340,6 +352,7 @@ public class YandexTranslateAPI
 		createService();
 		updateUiLang();
 		mLastSourceText = text;
+		mDetectedDirection = "";
 
 		//https://translate.yandex.net/api/v1.5/tr.json/translate?key=%s&text=%s&lang=%s&format=plain&options=1
 		mTranslateCall = mService.translate(mApiKey, text, mTranslateDirection, "plain", 1);

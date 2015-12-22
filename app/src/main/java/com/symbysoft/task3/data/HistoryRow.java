@@ -14,8 +14,10 @@ public class HistoryRow
 	public static final String KEY_ID = "id";
 	public static final String DATE_TIME = "dt";
 	public static final String DIRECTION = "dir";
+	public static final String DET_DIRECTION = "det_dir";
 	public static final String SOURCE = "src";
 	public static final String DEST = "dest";
+	public static final String WEIGHT = "weight";
 	public static final String FAV_ID = "fav_id";
 
 	@DatabaseField(columnName = KEY_ID, generatedId = true)
@@ -27,11 +29,17 @@ public class HistoryRow
 	@DatabaseField(columnName = DIRECTION, dataType = DataType.STRING, canBeNull = false, columnDefinition = "VARCHAR(5)")
 	private String mDirection;
 
+	@DatabaseField(columnName = DET_DIRECTION, dataType = DataType.STRING, canBeNull = false, columnDefinition = "VARCHAR(5) DEFAULT \"\"")
+	private String mDetDirection;
+
 	@DatabaseField(columnName = SOURCE, dataType = DataType.STRING, canBeNull = false, columnDefinition = "TEXT")
 	private String mSource;
 
 	@DatabaseField(columnName = DEST, dataType = DataType.STRING, canBeNull = false, columnDefinition = "TEXT")
 	private String mDestination;
+
+	@DatabaseField(columnName = WEIGHT, canBeNull = false, columnDefinition = "INTEGER DEFAULT 0")
+	private long mWeight;
 
 	@DatabaseField(columnName = FAV_ID, persisted = false, canBeNull = false)
 	private long mFavId;
@@ -66,6 +74,16 @@ public class HistoryRow
 		mDirection = direction;
 	}
 
+	public String getDetDirection()
+	{
+		return mDetDirection;
+	}
+
+	public void setDetDirection(String detDirection)
+	{
+		mDetDirection = detDirection;
+	}
+
 	public String getSource()
 	{
 		return mSource;
@@ -96,6 +114,16 @@ public class HistoryRow
 		mFavId = favId;
 	}
 
+	public long getWeight()
+	{
+		return mWeight;
+	}
+
+	public void setWeight(long weight)
+	{
+		mWeight = weight;
+	}
+
 	public HistoryRow now()
 	{
 		java.util.Date date = new java.util.Date();
@@ -106,12 +134,13 @@ public class HistoryRow
 	@Override
 	public String toString()
 	{
-		return String.format("{\"%s\"=\"%d\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%d\"}",
+		return String.format("{\"%s\"=\"%d\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%s\", \"%s\"=\"%d\", \"%s\"=\"%d\"}",
 				KEY_ID, mId,
 				DATE_TIME, mDt,
 				DIRECTION, mDirection,
 				SOURCE, mSource,
 				DEST, mDestination,
+				WEIGHT, mWeight,
 				FAV_ID, mFavId
 		);
 	}

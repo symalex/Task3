@@ -10,9 +10,13 @@ public class FavoriteRow
 
 	public static final String KEY_ID = "id";
 	public static final String HIST_ID = "hist_id";
+	public static final String WEIGHT = "weight";
 
 	@DatabaseField(columnName = KEY_ID, generatedId = true)
 	private long mId;
+
+	@DatabaseField(columnName = WEIGHT, canBeNull = false, columnDefinition = "INTEGER DEFAULT 0")
+	private long mWeight;
 
 	@DatabaseField(columnName = HIST_ID, foreignColumnName = HistoryRow.KEY_ID, canBeNull = false, foreign = true, foreignAutoRefresh = true,
 			columnDefinition = "INTEGER REFERENCES " + HistoryRow.TABLE_NAME + "(" + HistoryRow.KEY_ID + ") ON DELETE CASCADE")
@@ -26,6 +30,16 @@ public class FavoriteRow
 	public void setId(long id)
 	{
 		mId = id;
+	}
+
+	public long getWeight()
+	{
+		return mWeight;
+	}
+
+	public void setWeight(long weight)
+	{
+		mWeight = weight;
 	}
 
 	public HistoryRow getHistory()
@@ -54,7 +68,7 @@ public class FavoriteRow
 	@Override
 	public String toString()
 	{
-		return String.format("{\"%s\"=\"%d\", \"%s\"=%s}", KEY_ID, mId, HIST_ID, mHistory != null ? mHistory.toString() : "null");
+		return String.format("{\"%s\"=\"%d\", \"%s\"=\"%d\", \"%s\"=%s}", KEY_ID, mId, WEIGHT, mWeight, HIST_ID, mHistory != null ? mHistory.toString() : "null");
 	}
 
 }

@@ -76,12 +76,20 @@ public class DataBaseHelper extends OrmLiteSqliteOpenHelper
 								h.setDirection(value);
 								break;
 
+							case HistoryRow.DET_DIRECTION:
+								h.setDetDirection(value);
+								break;
+
 							case HistoryRow.SOURCE:
 								h.setSource(value);
 								break;
 
 							case HistoryRow.DEST:
 								h.setDestination(value);
+								break;
+
+							case HistoryRow.WEIGHT:
+								h.setWeight(Long.parseLong(value));
 								break;
 
 							case HistoryRow.FAV_ID:

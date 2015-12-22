@@ -259,7 +259,6 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 				}
 				return true;
 
-
 			default:
 				return super.onOptionsItemSelected(item);
 		}
@@ -449,21 +448,22 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 				{
 					if (mAPIData != null && mAPIData.getDetectedDirection().length() > 0)
 					{
-						mTextViewTopTextInfo.setText(String.format("Исходный язык определен как: %s", mAPIData.decode(YandexTranslateAPIData.src(mAPIData.getDetectedDirection()), false)));
+						mTextViewTopTextInfo.setText(String.format(getResources().getString(R.string.msg_main_source_lang_detected_as),
+								mAPIData.decode(YandexTranslateAPIData.src(mAPIData.getDetectedDirection()), false)));
 					}
 					else
 					{
-						mTextViewTopTextInfo.setText("Текст на неизвестном языке");
+						mTextViewTopTextInfo.setText(getResources().getString(R.string.msg_main_source_unknown_language));
 					}
 				}
 				else
 				{
-					mTextViewTopTextInfo.setText("Ввведите текст для перевода");
+					mTextViewTopTextInfo.setText(getResources().getString(R.string.msg_main_source_enter_text));
 				}
 			}
 			else
 			{
-				mTextViewTopTextInfo.setText(String.format("Текст на %s языке", change_text(lang_name)));
+				mTextViewTopTextInfo.setText(String.format(getResources().getString(R.string.msg_main_source_text_info), change_text(lang_name)));
 			}
 		}
 	}
@@ -472,7 +472,7 @@ public class MainFragment extends Fragment implements InternetReceiverListener, 
 	{
 		if (mTextViewBottomTextInfo != null && lang_name != null)
 		{
-			mTextViewBottomTextInfo.setText(String.format("Перевод на %s языке", change_text(lang_name)));
+			mTextViewBottomTextInfo.setText(String.format(getResources().getString(R.string.msg_main_destination_text_info), change_text(lang_name)));
 		}
 	}
 

@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 	{
 		if (http_status_code == 403)
 		{
-			String msg = "Incorrect API key!";
+			String msg = getResources().getString(R.string.yandex_api_incorrect_key);
 			Snackbar.make(mDrawer, msg, Snackbar.LENGTH_LONG).show();
 		}
 		else
@@ -186,11 +186,11 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 			String msg;
 			if (http_status_code != 0)
 			{
-				msg = String.format("HTTP error: %d", http_status_code);
+				msg = String.format(getResources().getString(R.string.yandex_api_http_error_code), http_status_code);
 			}
 			else
 			{
-				msg = String.format("HTTP error: %s", message);
+				msg = String.format(getResources().getString(R.string.yandex_api_http_error_message), message);
 			}
 			Snackbar.make(mDrawer, msg, Snackbar.LENGTH_LONG).show();
 		}
@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 					((MainFragment) mFragment).setBtnTranslate(mBtnTranslate);
 					if (actionBar != null)
 					{
-						actionBar.setTitle("Main app");
+						actionBar.setTitle(getResources().getString(R.string.app_bar_main_title));
 					}
 					break;
 
@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 					mNavigationView.setCheckedItem(R.id.nav_history);
 					if (actionBar != null)
 					{
-						actionBar.setTitle("History");
+						actionBar.setTitle(getResources().getString(R.string.app_bar_history_title));
 					}
 					break;
 
@@ -264,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 					mNavigationView.setCheckedItem(R.id.nav_favorites);
 					if (actionBar != null)
 					{
-						actionBar.setTitle("Favorite");
+						actionBar.setTitle(getResources().getString(R.string.app_bar_favorite_title));
 					}
 					break;
 
@@ -272,16 +272,16 @@ public class MainActivity extends AppCompatActivity implements OnNavigationItemS
 					mBtnTranslate.setVisibility(View.GONE);
 					if (actionBar != null)
 					{
-						actionBar.setTitle("Settings");
+						actionBar.setTitle(getResources().getString(R.string.app_bar_settings_title));
 					}
 					if (mDataProvider != null)
 					{
 						mFragment = setFragment(R.id.app_bar_main_frame_main_container_id, SettingsFragment.newInstance(), SettingsFragment.FTAG);
 						mNavigationView.setCheckedItem(R.id.nav_settings);
-					}
-					else
-					{
-						Snackbar.make(mDrawer, "Language data not ready", Snackbar.LENGTH_LONG).show();
+						if (mDataProvider.getSettings().getTranslateAPIData().getDirs().size() == 0 || mDataProvider.getSettings().getTranslateAPIData().getLangs().size() == 0)
+						{
+							Snackbar.make(mDrawer, getResources().getString(R.string.msg_yandex_api_language_data_not_ready), Snackbar.LENGTH_LONG).show();
+						}
 					}
 					break;
 			}

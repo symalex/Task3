@@ -1,9 +1,10 @@
 package com.symbysoft.task3.ui.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -61,11 +62,7 @@ public class SplashActivity extends AppCompatActivity
 			case KeyEvent.KEYCODE_BACK:
 				if (!mAppExitFlag)
 				{
-					Context context = getApplicationContext();
-					CharSequence text = "Back key pressed";
-					int duration = Toast.LENGTH_LONG;
-
-					mToast = Toast.makeText(context, text, duration);
+					mToast = Toast.makeText(getApplicationContext(), getResources().getString(R.string.msg_splash_back_key_pressed), Toast.LENGTH_LONG);
 					mToast.show();
 					mAppExitFlag = true;
 

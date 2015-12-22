@@ -187,36 +187,36 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				}
 				mAdapter.notifyDataSetChanged();
 
-				mSnackbar = Snackbar.make(getActivity().findViewById(R.id.fragment_favorite_list_view), "Remove selected items?", Snackbar.LENGTH_INDEFINITE)
-						.setCallback(new Snackbar.Callback()
+				mSnackbar = Snackbar.make(getActivity().findViewById(R.id.fragment_history_list_view),
+						getResources().getString(R.string.msg_history_remove_selected_items), Snackbar.LENGTH_INDEFINITE).setCallback(new Snackbar.Callback()
+				{
+					@Override
+					public void onDismissed(Snackbar snackbar, int event)
+					{
+						switch (event)
 						{
-							@Override
-							public void onDismissed(Snackbar snackbar, int event)
-							{
-								switch (event)
-								{
-									case Snackbar.Callback.DISMISS_EVENT_SWIPE:
-									case Snackbar.Callback.DISMISS_EVENT_ACTION:
-									case Snackbar.Callback.DISMISS_EVENT_TIMEOUT:
-										mSnackbar = null;
-										if (mAdapter != null)
-										{
-											mAdapter.notifyDataSetChanged();
-										}
-										updateMenu();
-										break;
-								}
-							}
-						}).setAction("Remove", new View.OnClickListener()
-						{
-							@Override
-							public void onClick(View v)
-							{
+							case Snackbar.Callback.DISMISS_EVENT_SWIPE:
+							case Snackbar.Callback.DISMISS_EVENT_ACTION:
+							case Snackbar.Callback.DISMISS_EVENT_TIMEOUT:
 								mSnackbar = null;
-								startAction(R.id.history_menu_action_delete);
+								if (mAdapter != null)
+								{
+									mAdapter.notifyDataSetChanged();
+								}
 								updateMenu();
-							}
-						});
+								break;
+						}
+					}
+				}).setAction(getResources().getString(R.string.msg_history_remove_selected_action), new View.OnClickListener()
+				{
+					@Override
+					public void onClick(View v)
+					{
+						mSnackbar = null;
+						startAction(R.id.history_menu_action_delete);
+						updateMenu();
+					}
+				});
 				mSnackbar.show();
 			}
 		}
@@ -234,19 +234,6 @@ public class HistoryFragment extends Fragment implements LocalDataBaseListener, 
 				if (mDataProvider != null && position >= 0 && position < mDataProvider.getHistoryList().size())
 				{
 					inverseBookmark(position);
-
-					/*
-					HistoryRow hist_row = mDataProvider.getHistoryList().get(position);
-					long in_fav_id = hist_row.getFavId();
-					if (in_fav_id == 0)
-					{
-						startAction(R.id.history_menu_action_bookmark, position);
-					}
-					else
-					{
-						// remove from favorites
-						mDataProvider.getLocalDataBase().delFromFavorite(in_fav_id);
-					}*/
 				}
 				break;
 		}

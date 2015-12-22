@@ -3,6 +3,7 @@ package com.symbysoft.task3.data;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -63,7 +64,12 @@ public class SettingsProvider implements YandexTranslateApiListener
 		{
 			mTranslateAPIData.setApiKey(mCtx.getResources().getString(R.string.yandex_api_default_key));
 		}
-		mTranslateAPIData.setTranslateDirection(mPref.getString(YANDEX_API_TRANSLATE_DIRECTION, YandexTranslateAPIData.DEFAULT_DEST_VALUE));
+		String sys_lang = Locale.getDefault().getLanguage();
+		if (!sys_lang.equals("ru") && !sys_lang.equals("en"))
+		{
+			sys_lang = YandexTranslateAPIData.DEFAULT_DEST_VALUE;
+		}
+		mTranslateAPIData.setTranslateDirection(mPref.getString(YANDEX_API_TRANSLATE_DIRECTION, sys_lang));
 
 		// read directions
 		mTranslateAPIData.setDirs(mPref.getStringSet(YANDEX_API_SUPPORTED_DIRECTIONS, new HashSet<String>()));

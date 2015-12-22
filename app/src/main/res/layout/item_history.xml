@@ -41,7 +41,6 @@
 				android:layout_height="wrap_content"
 				android:layout_marginLeft="6dp"
 				android:layout_weight="1"
-				android:text="text source"
 				android:textSize="14sp"
 				android:textStyle="bold" />
 
@@ -51,7 +50,6 @@
 				android:layout_height="wrap_content"
 				android:layout_marginLeft="6dp"
 				android:layout_weight="1"
-				android:text="text dest"
 				android:textSize="12sp"
 				android:textStyle="italic" />
 		</LinearLayout>

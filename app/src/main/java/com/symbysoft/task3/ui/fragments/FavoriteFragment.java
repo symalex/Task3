@@ -177,27 +177,27 @@ public class FavoriteFragment extends Fragment implements LocalDataBaseListener,
 				}
 				mAdapter.notifyDataSetChanged();
 
-				mSnackbar = Snackbar.make(getActivity().findViewById(R.id.fragment_favorite_list_view), "Remove selected items?", Snackbar.LENGTH_INDEFINITE)
-						.setCallback(new Snackbar.Callback()
+				mSnackbar = Snackbar.make(getActivity().findViewById(R.id.fragment_favorite_list_view),
+						getResources().getString(R.string.msg_favorite_remove_selected_items), Snackbar.LENGTH_INDEFINITE).setCallback(new Snackbar.Callback()
+				{
+					@Override
+					public void onDismissed(Snackbar snackbar, int event)
+					{
+						switch (event)
 						{
-							@Override
-							public void onDismissed(Snackbar snackbar, int event)
-							{
-								switch (event)
+							case Snackbar.Callback.DISMISS_EVENT_SWIPE:
+							case Snackbar.Callback.DISMISS_EVENT_ACTION:
+							case Snackbar.Callback.DISMISS_EVENT_TIMEOUT:
+								mSnackbar = null;
+								if (mAdapter != null)
 								{
-									case Snackbar.Callback.DISMISS_EVENT_SWIPE:
-									case Snackbar.Callback.DISMISS_EVENT_ACTION:
-									case Snackbar.Callback.DISMISS_EVENT_TIMEOUT:
-										mSnackbar = null;
-										if (mAdapter != null)
-										{
-											mAdapter.notifyDataSetChanged();
-										}
-										updateMenu();
-										break;
+									mAdapter.notifyDataSetChanged();
 								}
-							}
-						}).setAction("Remove", new View.OnClickListener()
+								updateMenu();
+								break;
+						}
+					}
+				}).setAction(getResources().getString(R.string.msg_favorite_remove_selected_action), new View.OnClickListener()
 						{
 							@Override
 							public void onClick(View v)

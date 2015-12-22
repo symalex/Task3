@@ -12,7 +12,7 @@
 			android:id="@+id/fragment_settings_api_key"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:hint="Translate API key (https://tech.yandex.com/translate/)" />
+			android:hint="@string/settings_yandex_api_key_hint" />
 
 	</android.support.design.widget.TextInputLayout>
 
@@ -20,13 +20,13 @@
 		android:id="@+id/fragment_settings_autodetect"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="Autodetect text language" />
+		android:text="@string/settings_autodetect_language" />
 
 	<TextView
 		android:id="@+id/fragment_settings_src_lang_info"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="Source text language" />
+		android:text="@string/settings_source_language" />
 
 	<Spinner
 		android:id="@+id/fragment_settings_src_lang"
@@ -38,12 +38,12 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:gravity="center_horizontal"
-		android:text="Exchange" />
+		android:text="@string/settings_exchange_language" />
 
 	<TextView
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="Result text language" />
+		android:text="@string/settings_result_language" />
 
 	<Spinner
 		android:id="@+id/fragment_settings_result_lang"
@@ -60,13 +60,13 @@
 			android:id="@+id/fragment_settings_btn_ok"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:text="Save" />
+			android:text="@string/settings_save" />
 
 		<Button
 			android:id="@+id/fragment_settings_btn_cancel"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:text="Cancel" />
+			android:text="@string/settings_cancel" />
 	</LinearLayout>
 
 </LinearLayout>

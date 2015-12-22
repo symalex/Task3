@@ -235,12 +235,13 @@ public class SettingsFragment extends Fragment implements OnCheckedChangeListene
 		ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, sources);
 		mSpinnerSourceLanguage.setAdapter(spinnerArrayAdapter);
 
-		if (sources.length > 0 && !select_spinner_by_name(mSpinnerSourceLanguage, sources, mSettings.getTranslateAPIData().getLangs().get(YandexTranslateAPIData.src(direction))))
+		String src_name = mSettings.getTranslateAPIData().getLangs().get(YandexTranslateAPIData.src(direction));
+		if (sources.length > 0 && !select_spinner_by_name(mSpinnerSourceLanguage, sources, src_name))
 		{
 			View view = getView();
 			if (view != null)
 			{
-				Snackbar.make(view, "Source Language not supported!", Snackbar.LENGTH_LONG).show();
+				Snackbar.make(view, String.format(getResources().getString(R.string.msg_settings_source_lang_not_supported), src_name), Snackbar.LENGTH_LONG).show();
 			}
 			mSpinnerSourceLanguage.setSelection(0);
 		}
@@ -267,7 +268,7 @@ public class SettingsFragment extends Fragment implements OnCheckedChangeListene
 			View view = getView();
 			if (view != null)
 			{
-				Snackbar.make(view, String.format("Destination Language: %s not supported!", dst_name), Snackbar.LENGTH_LONG).show();
+				Snackbar.make(view, String.format(getResources().getString(R.string.msg_settings_destination_lang_not_supported), dst_name), Snackbar.LENGTH_LONG).show();
 			}
 			mSpinnerResultLanguage.setSelection(0);
 		}
